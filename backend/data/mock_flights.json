@@ -1,1 +1,34 @@
-[]
+[
+    {
+      "flight_number": "DL123",
+      "operating_carrier": "DL",
+      "origin": "JFK",
+      "destination": "AUS",
+      "departure_time": "2026-11-13T17:30:00-05:00",
+      "arrival_time": "2026-11-13T20:35:00-06:00"
+    },
+    {
+      "flight_number": "DL200",
+      "operating_carrier": "DL",
+      "origin": "JFK",
+      "destination": "LAX",
+      "departure_time": "2026-11-13T18:00:00-05:00",
+      "arrival_time": "2026-11-13T21:15:00-08:00"
+    },
+    {
+      "flight_number": "DL300",
+      "operating_carrier": "DL",
+      "origin": "SEA",
+      "destination": "AUS",
+      "departure_time": "2026-11-13T16:30:00-08:00",
+      "arrival_time": "2026-11-13T22:10:00-06:00"
+    },
+    {
+      "flight_number": "DL400",
+      "operating_carrier": "DL",
+      "origin": "SEA",
+      "destination": "DEN",
+      "departure_time": "2026-11-13T17:00:00-08:00",
+      "arrival_time": "2026-11-13T20:30:00-07:00"
+    }
+]
