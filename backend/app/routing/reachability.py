@@ -12,11 +12,14 @@ def get_direct_destinations(
 
 def find_common_destinations(
     flights: list[FlightSegment],
-    origin_a: str,
-    origin_b: str,
+    traveler_a: TravelerRequest,
+    traveler_b: TravelerRequest,
 ) -> set[str]:
-    destinations_a = get_direct_destinations(flights, origin_a)
-    destinations_b = get_direct_destinations(flights, origin_b)
+    available_a = get_available_flights(flights, traveler_a)
+    available_b = get_available_flights(flights, traveler_b)
+
+    destinations_a = {flight.destination for flight in available_a}
+    destinations_b = {flight.destination for flight in available_b}
 
     return destinations_a & destinations_b
 

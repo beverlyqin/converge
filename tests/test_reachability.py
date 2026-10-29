@@ -5,7 +5,22 @@ from backend.app.domain.models import TravelerRequest
 
 def test_find_common_destinations():
     flights = load_mock_flights()
-    result = find_common_destinations(flights, "JFK", "SEA")
+    traveler_a = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+    traveler_b = TravelerRequest(
+        origin="SEA",
+        depart_after="2026-11-13T16:00:00-08:00",
+        depart_before="2026-11-13T23:59:00-08:00",
+    )
+    result = find_common_destinations(
+        flights,
+        traveler_a,
+        traveler_b,
+    )
+
     assert result == {"AUS"}
 
 def test_get_availble_flights_filters_by_departure_window():
