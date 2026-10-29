@@ -30,5 +30,21 @@
       "destination": "DEN",
       "departure_time": "2026-11-13T17:00:00-08:00",
       "arrival_time": "2026-11-13T20:30:00-07:00"
+    },
+    {
+      "flight_number": "DL501",
+      "operating_carrier": "DL",
+      "origin": "AUS",
+      "destination": "JFK",
+      "departure_time": "2026-11-15T17:00:00-06:00",
+      "arrival_time": "2026-11-15T21:20:00-05:00"
+    },
+    {
+      "flight_number": "DL502",
+      "operating_carrier": "DL",
+      "origin": "AUS",
+      "destination": "SEA",
+      "departure_time": "2026-11-15T16:30:00-06:00",
+      "arrival_time": "2026-11-15T19:15:00-08:00"
     }
 ]

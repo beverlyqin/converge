@@ -1,5 +1,5 @@
 from backend.app.providers.mock import load_mock_flights
-from backend.app.routing.reachability import find_common_destinations, get_available_flights
+from backend.app.routing.reachability import find_common_destinations, get_available_flights, get_return_flights
 from backend.app.domain.models import TravelerRequest
 
 
@@ -44,3 +44,32 @@ def test_traveler_request_can_be_one_way():
 
     assert traveler.return_after is None
     assert traveler.return_before is None
+
+def test_get_return_flights_for_round_trip():
+    flights = load_mock_flights()
+
+    traveler = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+        return_after="2026-11-15T15:00:00-06:00",
+        return_before="2026-11-15T20:00:00-06:00",
+    )
+
+    result = get_return_flights(flights, traveler, "AUS")
+
+    assert len(result) == 1
+    assert result[0].flight_number == "DL501"
+
+def test_get_return_flights_for_one_way_trip():
+    flights = load_mock_flights()
+
+    traveler = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+
+    result = get_return_flights(flights, traveler, "AUS")
+
+    assert result == []

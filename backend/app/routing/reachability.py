@@ -33,3 +33,18 @@ def get_available_flights(
         if flight.origin == traveler.origin
         and traveler.depart_after <= flight.departure_time <= traveler.depart_before
     ] 
+
+def get_return_flights(
+    flights: list[FlightSegment],
+    traveler: TravelerRequest,
+    destination: str,
+) -> list[FlightSegment]:
+    if traveler.return_after is None or traveler.return_before is None:
+        return []
+    return [
+        flight 
+        for flight in flights
+        if flight.origin == destination 
+        and flight.destination == traveler.origin
+        and traveler.return_after <= flight.departure_time <= traveler.return_before
+    ]
