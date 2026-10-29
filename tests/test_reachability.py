@@ -1,7 +1,6 @@
 from backend.app.providers.mock import load_mock_flights
 from backend.app.routing.reachability import find_common_destinations, get_available_flights, get_return_flights
-from backend.app.domain.models import TravelerRequest
-
+from backend.app.domain.models import FlightSegment, Itinerary, TravelerRequest
 
 def test_find_common_destinations():
     flights = load_mock_flights()
@@ -100,3 +99,27 @@ def test_common_destination_requires_feasible_return():
     )
 
     assert result == {"AUS"}
+
+def test_itinerary_stop_count():
+    segment_1 = FlightSegment(
+        flight_number="DL111",
+        operating_carrier="DL",
+        origin="JFK",
+        destination="ATL",
+        departure_time="2026-11-13T17:00:00-05:00",
+        arrival_time="2026-11-13T19:30:00-05:00",
+    )
+
+    segment_2 = FlightSegment(
+        flight_number="DL222",
+        operating_carrier="DL",
+        origin="ATL",
+        destination="AUS",
+        departure_time="2026-11-13T20:30:00-05:00",
+        arrival_time="2026-11-13T22:00:00-06:00",
+    )
+
+    itinerary = Itinerary(segments=[segment_1, segment_2])
+
+    assert itinerary.stops == 1
+    

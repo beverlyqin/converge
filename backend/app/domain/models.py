@@ -9,6 +9,13 @@ class FlightSegment(BaseModel):
     departure_time: datetime
     arrival_time: datetime
 
+class Itinerary(BaseModel):
+    segments: list[FlightSegment]
+
+    @property
+    def stops(self) -> int:
+        return len(self.segments) - 1
+
 class TravelerRequest(BaseModel):
     origin: str
     depart_after: datetime

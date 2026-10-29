@@ -3,7 +3,6 @@ from pathlib import Path
 
 from backend.app.domain.models import FlightSegment
 
-
 def load_mock_flights():
     file_path = Path("backend/data/mock_flights.json")
 
