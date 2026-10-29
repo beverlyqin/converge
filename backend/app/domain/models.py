@@ -8,4 +8,9 @@ class FlightSegment(BaseModel):
     destination: str
     departure_time: datetime
     arrival_time: datetime
+
+class TravelerRequest(BaseModel):
+    origin: str
+    depart_after: datetime
+    depart_before: datetime
     

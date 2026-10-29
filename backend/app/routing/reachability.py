@@ -1,4 +1,4 @@
-from backend.app.domain.models import FlightSegment
+from backend.app.domain.models import FlightSegment, TravelerRequest
 
 def get_direct_destinations(
         flights: list[FlightSegment],
@@ -19,3 +19,14 @@ def find_common_destinations(
     destinations_b = get_direct_destinations(flights, origin_b)
 
     return destinations_a & destinations_b
+
+def get_available_flights(
+    flights: list[FlightSegment],
+    traveler: TravelerRequest,
+) -> list[FlightSegment]:
+    return [
+        flight 
+        for flight in flights
+        if flight.origin == traveler.origin
+        and traveler.depart_after <= flight.departure_time <= traveler.depart_before
+    ] 
