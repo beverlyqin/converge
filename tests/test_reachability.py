@@ -73,3 +73,30 @@ def test_get_return_flights_for_one_way_trip():
     result = get_return_flights(flights, traveler, "AUS")
 
     assert result == []
+
+def test_common_destination_requires_feasible_return():
+    flights = load_mock_flights()
+
+    traveler_a = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+        return_after="2026-11-15T15:00:00-06:00",
+        return_before="2026-11-15T20:00:00-06:00",
+    )
+
+    traveler_b = TravelerRequest(
+        origin="SEA",
+        depart_after="2026-11-13T16:00:00-08:00",
+        depart_before="2026-11-13T23:59:00-08:00",
+        return_after="2026-11-15T15:00:00-06:00",
+        return_before="2026-11-15T20:00:00-06:00",
+    )
+
+    result = find_common_destinations(
+        flights,
+        traveler_a,
+        traveler_b,
+    )
+
+    assert result == {"AUS"}

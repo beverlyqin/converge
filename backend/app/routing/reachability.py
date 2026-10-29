@@ -21,7 +21,14 @@ def find_common_destinations(
     destinations_a = {flight.destination for flight in available_a}
     destinations_b = {flight.destination for flight in available_b}
 
-    return destinations_a & destinations_b
+    common_destinations = destinations_a & destinations_b
+
+    return {
+        destination
+        for destination in common_destinations
+        if has_feasible_return(flights, traveler_a, destination)
+        and has_feasible_return(flights, traveler_b, destination)
+    }
 
 def get_available_flights(
     flights: list[FlightSegment],
@@ -48,3 +55,13 @@ def get_return_flights(
         and flight.destination == traveler.origin
         and traveler.return_after <= flight.departure_time <= traveler.return_before
     ]
+
+def has_feasible_return(
+    flights: list[FlightSegment],
+    traveler: TravelerRequest,
+    destination: str,
+) -> bool:
+    if traveler.return_after is None or traveler.return_before is None:
+        return True
+
+    return len(get_return_flights(flights, traveler, destination)) > 0
