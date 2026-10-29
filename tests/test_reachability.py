@@ -34,3 +34,13 @@ def test_get_availble_flights_filters_by_departure_window():
 
     assert len(result) == 1
     assert result[0].flight_number == "DL123"
+
+def test_traveler_request_can_be_one_way():
+    traveler = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+
+    assert traveler.return_after is None
+    assert traveler.return_before is None

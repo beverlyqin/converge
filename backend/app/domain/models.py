@@ -13,4 +13,6 @@ class TravelerRequest(BaseModel):
     origin: str
     depart_after: datetime
     depart_before: datetime
-    
+    return_after: datetime | None = None
+    return_before: datetime | None = None
+
