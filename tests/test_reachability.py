@@ -140,3 +140,4 @@ def test_get_one_stop_itineraries():
     assert result[0].stops == 1
     assert result[0].segments[0].flight_number == "DL610"
     assert result[0].segments[1].flight_number == "DL611"
+    assert result[0].total_duration.total_seconds() == 20400

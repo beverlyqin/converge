@@ -15,6 +15,10 @@ class Itinerary(BaseModel):
     @property
     def stops(self) -> int:
         return len(self.segments) - 1
+    
+    @property
+    def total_duration(self):
+        return self.segments[-1].arrival_time - self.segments[0].departure_time
 
 class TravelerRequest(BaseModel):
     origin: str
