@@ -1,6 +1,7 @@
 from backend.app.providers.mock import load_mock_flights
 from backend.app.routing.reachability import find_common_destinations, get_available_flights, get_return_flights
 from backend.app.domain.models import FlightSegment, Itinerary, TravelerRequest
+from backend.app.routing.itineraries import get_one_stop_itineraries
 
 def test_find_common_destinations():
     flights = load_mock_flights()
@@ -29,10 +30,11 @@ def test_get_availble_flights_filters_by_departure_window():
         depart_after="2026-11-13T17:00:00-05:00",
         depart_before="2026-11-13T17:45:00-05:00",
     )
-    result = get_available_flights(flights, traveler)
 
-    assert len(result) == 1
-    assert result[0].flight_number == "DL123"
+    result = get_available_flights(flights, traveler)
+    assert len(result) == 2
+    flight_numbers = {flight.flight_number for flight in result}
+    assert flight_numbers == {"DL123", "DL610"}
 
 def test_traveler_request_can_be_one_way():
     traveler = TravelerRequest(
@@ -122,4 +124,13 @@ def test_itinerary_stop_count():
     itinerary = Itinerary(segments=[segment_1, segment_2])
 
     assert itinerary.stops == 1
-    
+
+def test_get_one_stop_itineraries():
+    flights = load_mock_flights()
+
+    result = get_one_stop_itineraries(flights, "JFK")
+
+    assert len(result) == 1
+    assert result[0].stops == 1
+    assert result[0].segments[0].flight_number == "DL610"
+    assert result[0].segments[1].flight_number == "DL611"
