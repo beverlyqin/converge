@@ -128,7 +128,13 @@ def test_itinerary_stop_count():
 def test_get_one_stop_itineraries():
     flights = load_mock_flights()
 
-    result = get_one_stop_itineraries(flights, "JFK")
+    traveler = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+
+    result = get_one_stop_itineraries(flights, traveler)
 
     assert len(result) == 1
     assert result[0].stops == 1
