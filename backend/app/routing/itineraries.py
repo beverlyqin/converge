@@ -1,5 +1,10 @@
 from datetime import timedelta
-from backend.app.domain.models import FlightSegment, Itinerary, TravelerRequest
+from backend.app.domain.models import (
+    FlightSegment,
+    Itinerary,
+    TravelerRequest,
+    SearchConstraints,
+)
 from backend.app.routing.reachability import get_available_flights
 
 def get_one_stop_itineraries(
@@ -120,3 +125,19 @@ def group_itineraries_by_destination(
         grouped[destination].append(itinerary)
 
     return grouped
+
+def apply_itinerary_constraints(
+    itineraries: list[Itinerary],
+    constraints: SearchConstraints,
+) -> list[Itinerary]:
+    filtered = filter_by_max_stops(
+        itineraries,
+        max_stops=constraints.max_stops,
+    )
+    if constraints.max_travel_time_minutes is not None:
+        filtered = filter_by_travel_time(
+            filtered,
+            max_minutes=constraints.max_travel_time_minutes,
+        )
+
+    return filtered

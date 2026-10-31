@@ -1,6 +1,6 @@
 from backend.app.providers.mock import load_mock_flights
 from backend.app.routing.reachability import find_common_destinations, get_available_flights, get_return_flights
-from backend.app.domain.models import FlightSegment, Itinerary, TravelerRequest
+from backend.app.domain.models import FlightSegment, Itinerary, TravelerRequest, SearchConstraints
 from backend.app.routing.itineraries import (
     get_one_stop_itineraries,
     get_direct_itineraries,
@@ -9,6 +9,7 @@ from backend.app.routing.itineraries import (
     filter_by_max_stops,
     filter_by_travel_time,
     filter_by_arrival_sync,
+    apply_itinerary_constraints,
 )
 
 def test_find_common_destinations():
@@ -341,3 +342,34 @@ def test_travel_time_filter_before_matching():
     )
 
     assert pairs == []
+
+def test_apply_itinerary_constraints():
+    flights = load_mock_flights()
+
+    traveler = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+
+    constraints = SearchConstraints(
+        max_stops=0,
+        max_travel_time_minutes=300,
+    )
+
+    itineraries = get_itineraries(flights, traveler)
+
+    filtered = apply_itinerary_constraints(
+        itineraries,
+        constraints,
+    )
+
+    summary = {
+        (itinerary.destination, itinerary.stops)
+        for itinerary in filtered
+    }
+
+    assert summary == {
+        ("AUS", 0),
+        ("ATL", 0),
+    }

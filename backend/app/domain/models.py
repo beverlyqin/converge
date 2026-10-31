@@ -31,3 +31,7 @@ class TravelerRequest(BaseModel):
     return_after: datetime | None = None
     return_before: datetime | None = None
 
+class SearchConstraints(BaseModel):
+    max_stops: int = 1
+    max_travel_time_minutes: int | None = None
+    max_arrival_gap_minutes: int | None = None
