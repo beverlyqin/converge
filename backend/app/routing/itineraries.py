@@ -153,3 +153,32 @@ def apply_pair_constraints(
             max_gap_minutes=constraints.max_arrival_gap_minutes,
         )
     return filtered
+
+def search_meeting_itineraries(
+    flights: list[FlightSegment],
+    traveler_a: TravelerRequest,
+    traveler_b: TravelerRequest,
+    constraints: SearchConstraints,
+) -> list[tuple[Itinerary, Itinerary]]:
+    itineraries_a = get_itineraries(flights, traveler_a)
+    itineraries_b = get_itineraries(flights, traveler_b)
+
+    itineraries_a = apply_itinerary_constraints(
+        itineraries_a,
+        constraints,
+    )
+
+    itineraries_b = apply_itinerary_constraints(
+        itineraries_b,
+        constraints,
+    )
+
+    pairs = get_matching_itinerary_pairs(
+        itineraries_a,
+        itineraries_b,
+    )
+
+    return apply_pair_constraints(
+        pairs,
+        constraints,
+    )

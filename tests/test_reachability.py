@@ -11,6 +11,7 @@ from backend.app.routing.itineraries import (
     filter_by_arrival_sync,
     apply_itinerary_constraints,
     apply_pair_constraints,
+    search_meeting_itineraries,
 )
 
 def test_find_common_destinations():
@@ -406,3 +407,31 @@ def test_apply_pair_constraints():
     )
 
     assert filtered == []
+
+def test_search_meeting_itineraries():
+    flights = load_mock_flights()
+    traveler_a = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+    traveler_b = TravelerRequest(
+        origin="SEA",
+        depart_after="2026-11-13T16:00:00-08:00",
+        depart_before="2026-11-13T23:59:00-08:00",
+    )
+    constraints = SearchConstraints(
+        max_stops=0,
+        max_travel_time_minutes=300,
+        max_arrival_gap_minutes=120,
+    )
+    pairs = search_meeting_itineraries(
+        flights,
+        traveler_a,
+        traveler_b,
+        constraints,
+    )
+
+    assert len(pairs) == 1
+    assert pairs[0][0].destination == "AUS"
+    assert pairs[0][1].destination == "AUS"
