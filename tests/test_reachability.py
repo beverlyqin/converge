@@ -10,6 +10,7 @@ from backend.app.routing.itineraries import (
     filter_by_travel_time,
     filter_by_arrival_sync,
     apply_itinerary_constraints,
+    apply_pair_constraints,
 )
 
 def test_find_common_destinations():
@@ -373,3 +374,35 @@ def test_apply_itinerary_constraints():
         ("AUS", 0),
         ("ATL", 0),
     }
+
+def test_apply_pair_constraints():
+    flights = load_mock_flights()
+    traveler_a = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+    traveler_b = TravelerRequest(
+        origin="SEA",
+        depart_after="2026-11-13T16:00:00-08:00",
+        depart_before="2026-11-13T23:59:00-08:00",
+    )
+
+    constraints = SearchConstraints(
+        max_arrival_gap_minutes=60,
+    )
+
+    itineraries_a = get_itineraries(flights, traveler_a)
+    itineraries_b = get_itineraries(flights, traveler_b)
+
+    pairs = get_matching_itinerary_pairs(
+        itineraries_a,
+        itineraries_b,
+    )
+
+    filtered = apply_pair_constraints(
+        pairs,
+        constraints,
+    )
+
+    assert filtered == []

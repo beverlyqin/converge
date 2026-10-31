@@ -141,3 +141,15 @@ def apply_itinerary_constraints(
         )
 
     return filtered
+
+def apply_pair_constraints(
+        pairs: list[tuple[Itinerary, Itinerary]],
+        constraints: SearchConstraints,
+) -> list[tuple[Itinerary, Itinerary]]:
+    filtered = pairs
+    if constraints.max_arrival_gap_minutes is not None:
+        filtered = filter_by_arrival_sync(
+            filtered, 
+            max_gap_minutes=constraints.max_arrival_gap_minutes,
+        )
+    return filtered
