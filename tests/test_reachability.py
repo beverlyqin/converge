@@ -276,3 +276,33 @@ def test_matching_itinerary_pairs_can_be_filtered_by_arrival_sync():
     )
 
     assert filtered == []
+
+def test_max_stops_filter_before_matching():
+    flights = load_mock_flights()
+
+    traveler_a = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+
+    traveler_b = TravelerRequest(
+        origin="SEA",
+        depart_after="2026-11-13T16:00:00-08:00",
+        depart_before="2026-11-13T23:59:00-08:00",
+    )
+
+    itineraries_a = get_itineraries(flights, traveler_a)
+    itineraries_b = get_itineraries(flights, traveler_b)
+
+    itineraries_a = filter_by_max_stops(itineraries_a, max_stops=0)
+    itineraries_b = filter_by_max_stops(itineraries_b, max_stops=0)
+
+    pairs = get_matching_itinerary_pairs(
+        itineraries_a,
+        itineraries_b,
+    )
+
+    assert len(pairs) == 1
+    assert pairs[0][0].destination == "AUS"
+    assert pairs[0][1].destination == "AUS"
