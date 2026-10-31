@@ -28,3 +28,13 @@ def get_one_stop_itineraries(
             itineraries.append(itinerary)
 
     return itineraries
+
+def filter_by_max_stops(
+        itineraries: list[Itinerary],
+        max_stops: int,
+) -> list[Itinerary]:
+    return [
+        itinerary 
+        for itinerary in itineraries 
+        if itinerary.stops <= max_stops
+    ]
