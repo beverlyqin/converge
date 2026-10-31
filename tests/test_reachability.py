@@ -306,3 +306,38 @@ def test_max_stops_filter_before_matching():
     assert len(pairs) == 1
     assert pairs[0][0].destination == "AUS"
     assert pairs[0][1].destination == "AUS"
+
+def test_travel_time_filter_before_matching():
+    flights = load_mock_flights()
+
+    traveler_a = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+
+    traveler_b = TravelerRequest(
+        origin="SEA",
+        depart_after="2026-11-13T16:00:00-08:00",
+        depart_before="2026-11-13T23:59:00-08:00",
+    )
+
+    itineraries_a = get_itineraries(flights, traveler_a)
+    itineraries_b = get_itineraries(flights, traveler_b)
+
+    itineraries_a = filter_by_travel_time(
+        itineraries_a,
+        max_minutes=230,
+    )
+
+    itineraries_b = filter_by_travel_time(
+        itineraries_b,
+        max_minutes=230,
+    )
+
+    pairs = get_matching_itinerary_pairs(
+        itineraries_a,
+        itineraries_b,
+    )
+
+    assert pairs == []
