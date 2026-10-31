@@ -38,3 +38,13 @@ def filter_by_max_stops(
         for itinerary in itineraries 
         if itinerary.stops <= max_stops
     ]
+
+def filter_by_travel_time(
+    itineraries: list[Itinerary],
+    max_minutes: int,
+) -> list[Itinerary]:
+    return [
+        itinerary
+        for itinerary in itineraries
+        if itinerary.total_duration.total_seconds() / 60 <= max_minutes
+    ]

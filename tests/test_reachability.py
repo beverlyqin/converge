@@ -4,6 +4,7 @@ from backend.app.domain.models import FlightSegment, Itinerary, TravelerRequest
 from backend.app.routing.itineraries import (
     get_one_stop_itineraries,
     filter_by_max_stops,
+    filter_by_travel_time,
 )
 
 def test_find_common_destinations():
@@ -153,5 +154,18 @@ def test_filter_by_max_stops():
 
     itineraries = get_one_stop_itineraries(flights, traveler)
     result = filter_by_max_stops(itineraries, 0)
+
+    assert result == []
+
+def test_filter_by_travel_time():
+    flights = load_mock_flights()
+    traveler = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+
+    itineraries = get_one_stop_itineraries(flights, traveler)
+    result = filter_by_travel_time(itineraries, 300)
 
     assert result == []
