@@ -2,7 +2,7 @@ from backend.app.domain.models import TravelerRequest, SearchConstraints
 from backend.app.providers.mock import load_mock_flights
 from backend.app.routing.itineraries import search_meeting_itineraries
 from backend.app.ranking.metrics import calculate_ranking_metrics
-
+from backend.app.ranking.scoring import normalize_lower_is_better
 
 def test_calculate_ranking_metrics():
     flights = load_mock_flights()
@@ -36,3 +36,14 @@ def test_calculate_ranking_metrics():
     assert metrics.arrival_gap_minutes == 95.0
     assert metrics.total_stops == 0
     assert metrics.total_travel_time_minutes == 465.0
+
+def test_normalize_lower_is_better():
+    result = normalize_lower_is_better([20, 60, 100])
+
+    assert result == [1.0, 0.5, 0.0]
+
+
+def test_normalize_lower_is_better_equal_values():
+    result = normalize_lower_is_better([0, 0, 0])
+
+    assert result == [1.0, 1.0, 1.0]
