@@ -5,6 +5,7 @@ from backend.app.routing.itineraries import (
     get_one_stop_itineraries,
     get_direct_itineraries,
     get_itineraries,
+    get_matching_itinerary_pairs,
     filter_by_max_stops,
     filter_by_travel_time,
     filter_by_arrival_sync,
@@ -221,3 +222,30 @@ def test_get_itineraries_combines_direct_and_one_stop():
         ("ATL", 0),
         ("MIA", 1),
     }
+
+def test_get_matching_itinerary_pairs():
+    flights = load_mock_flights()
+
+    traveler_a = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+
+    traveler_b = TravelerRequest(
+        origin="SEA",
+        depart_after="2026-11-13T16:00:00-08:00",
+        depart_before="2026-11-13T23:59:00-08:00",
+    )
+
+    itineraries_a = get_itineraries(flights, traveler_a)
+    itineraries_b = get_itineraries(flights, traveler_b)
+
+    pairs = get_matching_itinerary_pairs(
+        itineraries_a,
+        itineraries_b,
+    )
+
+    assert len(pairs) == 1
+    assert pairs[0][0].destination == "AUS"
+    assert pairs[0][1].destination == "AUS"

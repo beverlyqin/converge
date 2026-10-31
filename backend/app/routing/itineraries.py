@@ -89,3 +89,34 @@ def get_itineraries(
     one_stop = get_one_stop_itineraries(flights, traveler)
 
     return direct + one_stop
+
+def get_matching_itinerary_pairs(
+    itineraries_a: list[Itinerary],
+    itineraries_b: list[Itinerary],
+) -> list[tuple[Itinerary, Itinerary]]:
+    grouped_a = group_itineraries_by_destination(itineraries_a)
+    grouped_b = group_itineraries_by_destination(itineraries_b)
+    common_destinations = grouped_a.keys() & grouped_b.keys()
+    pairs = []
+
+    for destination in common_destinations:
+        for itinerary_a in grouped_a[destination]:
+            for itinerary_b in grouped_b[destination]:
+                pairs.append((itinerary_a, itinerary_b))
+
+    return pairs
+
+def group_itineraries_by_destination(
+    itineraries: list[Itinerary],
+) -> dict[str, list[Itinerary]]:
+    grouped = {}
+
+    for itinerary in itineraries:
+        destination = itinerary.destination
+
+        if destination not in grouped:
+            grouped[destination] = []
+
+        grouped[destination].append(itinerary)
+
+    return grouped
