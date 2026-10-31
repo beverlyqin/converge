@@ -3,6 +3,8 @@ from backend.app.routing.reachability import find_common_destinations, get_avail
 from backend.app.domain.models import FlightSegment, Itinerary, TravelerRequest
 from backend.app.routing.itineraries import (
     get_one_stop_itineraries,
+    get_direct_itineraries,
+    get_itineraries,
     filter_by_max_stops,
     filter_by_travel_time,
     filter_by_arrival_sync,
@@ -196,3 +198,26 @@ def test_filter_by_arrival_sync():
     result = filter_by_arrival_sync(pairs, 60)
 
     assert len(result) == 1
+
+def test_get_itineraries_combines_direct_and_one_stop():
+    flights = load_mock_flights()
+
+    traveler = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+
+    result = get_itineraries(flights, traveler)
+
+    summary = {
+        (itinerary.destination, itinerary.stops)
+        for itinerary in result
+    }
+
+    assert summary == {
+        ("AUS", 0),
+        ("LAX", 0),
+        ("ATL", 0),
+        ("MIA", 1),
+    }

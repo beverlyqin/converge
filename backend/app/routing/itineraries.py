@@ -1,5 +1,6 @@
 from datetime import timedelta
 from backend.app.domain.models import FlightSegment, Itinerary, TravelerRequest
+from backend.app.routing.reachability import get_available_flights
 
 def get_one_stop_itineraries(
     flights: list[FlightSegment],
@@ -69,3 +70,22 @@ def filter_by_arrival_sync(
         for pair in itinerary_pairs
         if get_arrival_gap_minutes(pair[0], pair[1]) <= max_gap_minutes
     ]
+
+def get_direct_itineraries(
+        flights: list[FlightSegment],
+        traveler: TravelerRequest,
+) -> list[Itinerary]:
+    available_flights = get_available_flights(flights, traveler)
+    return[
+        Itinerary(segments=[flight])
+        for flight in available_flights
+    ]
+
+def get_itineraries(
+    flights: list[FlightSegment],
+    traveler: TravelerRequest,
+) -> list[Itinerary]:
+    direct = get_direct_itineraries(flights, traveler)
+    one_stop = get_one_stop_itineraries(flights, traveler)
+
+    return direct + one_stop
