@@ -48,3 +48,24 @@ def filter_by_travel_time(
         for itinerary in itineraries
         if itinerary.total_duration.total_seconds() / 60 <= max_minutes
     ]
+
+def get_arrival_gap_minutes(
+    itinerary_a: Itinerary,
+    itinerary_b: Itinerary,
+) -> float:
+    arrival_a = itinerary_a.segments[-1].arrival_time
+    arrival_b = itinerary_b.segments[-1].arrival_time
+
+    gap = abs(arrival_a - arrival_b)
+
+    return gap.total_seconds() / 60
+
+def filter_by_arrival_sync(
+    itinerary_pairs: list[tuple[Itinerary, Itinerary]],
+    max_gap_minutes: int,
+) -> list[tuple[Itinerary, Itinerary]]:
+    return [
+        pair
+        for pair in itinerary_pairs
+        if get_arrival_gap_minutes(pair[0], pair[1]) <= max_gap_minutes
+    ]

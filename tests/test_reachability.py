@@ -5,6 +5,7 @@ from backend.app.routing.itineraries import (
     get_one_stop_itineraries,
     filter_by_max_stops,
     filter_by_travel_time,
+    filter_by_arrival_sync,
 )
 
 def test_find_common_destinations():
@@ -169,3 +170,29 @@ def test_filter_by_travel_time():
     result = filter_by_travel_time(itineraries, 300)
 
     assert result == []
+
+def test_filter_by_arrival_sync():
+    flight_a = FlightSegment(
+        flight_number="DL700",
+        operating_carrier="DL",
+        origin="JFK",
+        destination="AUS",
+        departure_time="2026-11-13T17:00:00-05:00",
+        arrival_time="2026-11-13T20:00:00-06:00",
+    )
+    flight_b = FlightSegment(
+        flight_number="DL701",
+        operating_carrier="DL",
+        origin="SEA",
+        destination="AUS",
+        departure_time="2026-11-13T16:00:00-08:00",
+        arrival_time="2026-11-13T20:30:00-06:00",
+    )
+
+    itinerary_a = Itinerary(segments=[flight_a])
+    itinerary_b = Itinerary(segments=[flight_b])
+
+    pairs = [(itinerary_a, itinerary_b)]
+    result = filter_by_arrival_sync(pairs, 60)
+
+    assert len(result) == 1
