@@ -117,3 +117,55 @@ def test_score_itinerary_pairs_ranks_by_weights():
 
     assert scored[0].itinerary_a.destination == "AUS"
     assert scored[1].itinerary_a.destination == "DEN"
+
+def test_score_itinerary_pairs_changes_with_weights():
+    aus_a = make_direct_itinerary(
+        "DL101",
+        "JFK",
+        "AUS",
+        "2026-11-13T17:00:00+00:00",
+        "2026-11-13T20:00:00+00:00",
+    )
+
+    aus_b = make_direct_itinerary(
+        "DL102",
+        "SEA",
+        "AUS",
+        "2026-11-13T17:30:00+00:00",
+        "2026-11-13T20:15:00+00:00",
+    )
+
+    den_a = make_direct_itinerary(
+        "DL201",
+        "JFK",
+        "DEN",
+        "2026-11-13T17:00:00+00:00",
+        "2026-11-13T19:00:00+00:00",
+    )
+
+    den_b = make_direct_itinerary(
+        "DL202",
+        "SEA",
+        "DEN",
+        "2026-11-13T17:00:00+00:00",
+        "2026-11-13T19:45:00+00:00",
+    )
+
+    pairs = [
+        (aus_a, aus_b),
+        (den_a, den_b),
+    ]
+
+    weights = RankingWeights(
+        arrival_sync=0.2,
+        stops=0.0,
+        travel_time=0.8,
+    )
+
+    scored = score_itinerary_pairs(
+        pairs,
+        weights,
+    )
+
+    assert scored[0].itinerary_a.destination == "DEN"
+    assert scored[1].itinerary_a.destination == "AUS"
