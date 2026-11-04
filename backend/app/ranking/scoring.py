@@ -1,11 +1,18 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 from backend.app.domain.models import Itinerary
 from backend.app.ranking.metrics import RankingMetrics, calculate_ranking_metrics
 
 class RankingWeights(BaseModel):
-    arrival_sync: float
-    stops: float
-    travel_time: float
+    arrival_sync: float = Field(ge=0)
+    stops: float = Field(ge=0)
+    travel_time: float = Field(ge=0)
+
+    @model_validator(mode="after")
+    def reqruie_positive_weight(self):
+        if self.arrival_sync ==0 and self.stops == 0 and self.travel_time == 0:
+            raise ValueError("At least one ranking weight must be positive.")
+
+        return self
 
 class ScoredItineraryPair(BaseModel):
     itinerary_a: Itinerary

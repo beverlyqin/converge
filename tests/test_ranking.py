@@ -1,3 +1,5 @@
+import pytest
+from pydantic import ValidationError
 from datetime import datetime
 from backend.app.domain.models import TravelerRequest, SearchConstraints, FlightSegment, Itinerary
 from backend.app.providers.mock import load_mock_flights
@@ -169,3 +171,19 @@ def test_score_itinerary_pairs_changes_with_weights():
 
     assert scored[0].itinerary_a.destination == "DEN"
     assert scored[1].itinerary_a.destination == "AUS"
+    
+def test_ranking_weights_reject_negative_values():
+    with pytest.raises(ValidationError):
+        RankingWeights(
+            arrival_sync=-1,
+            stops=1,
+            travel_time=1,
+        )
+
+def test_ranking_weights_require_at_least_one_positive_value():
+    with pytest.raises(ValidationError):
+        RankingWeights(
+            arrival_sync=0,
+            stops=0,
+            travel_time=0,
+        )
