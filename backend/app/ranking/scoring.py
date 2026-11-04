@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, model_validator
-from backend.app.domain.models import Itinerary
+from backend.app.domain.models import Itinerary, FlightSegment, TravelerRequest, SearchConstraints
 from backend.app.ranking.metrics import RankingMetrics, calculate_ranking_metrics
+from backend.app.routing.itineraries import search_meeting_itineraries
 
 class RankingWeights(BaseModel):
     arrival_sync: float = Field(ge=0)
@@ -95,3 +96,23 @@ def score_itinerary_pairs(
     )
 
     return scored_pairs
+
+def rank_meeting_itineraries(
+    flights: list[FlightSegment],
+    traveler_a: TravelerRequest,
+    traveler_b: TravelerRequest, 
+    constraints: SearchConstraints,
+    weights: RankingWeights,
+) -> list[ScoredItineraryPair]:
+    """Find feasible meetup itineraries and rank them"""
+    pairs = search_meeting_itineraries(
+        flights,
+        traveler_a,
+        traveler_b,
+        constraints,
+    )
+
+    return score_itinerary_pairs(
+        pairs,
+        weights,
+    )

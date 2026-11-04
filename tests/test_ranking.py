@@ -5,7 +5,7 @@ from backend.app.domain.models import TravelerRequest, SearchConstraints, Flight
 from backend.app.providers.mock import load_mock_flights
 from backend.app.routing.itineraries import search_meeting_itineraries
 from backend.app.ranking.metrics import calculate_ranking_metrics
-from backend.app.ranking.scoring import normalize_lower_is_better, RankingWeights, score_itinerary_pairs
+from backend.app.ranking.scoring import normalize_lower_is_better, RankingWeights, score_itinerary_pairs, rank_meeting_itineraries
 
 def test_calculate_ranking_metrics():
     flights = load_mock_flights()
@@ -171,7 +171,7 @@ def test_score_itinerary_pairs_changes_with_weights():
 
     assert scored[0].itinerary_a.destination == "DEN"
     assert scored[1].itinerary_a.destination == "AUS"
-    
+
 def test_ranking_weights_reject_negative_values():
     with pytest.raises(ValidationError):
         RankingWeights(
@@ -187,3 +187,43 @@ def test_ranking_weights_require_at_least_one_positive_value():
             stops=0,
             travel_time=0,
         )
+
+def test_rank_meeting_itineraries():
+    flights = load_mock_flights()
+
+    traveler_a = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+
+    traveler_b = TravelerRequest(
+        origin="SEA",
+        depart_after="2026-11-13T16:00:00-08:00",
+        depart_before="2026-11-13T23:59:00-08:00",
+    )
+
+    constraints = SearchConstraints(
+        max_stops=0,
+        max_travel_time_minutes=300,
+        max_arrival_gap_minutes=120,
+    )
+
+    weights = RankingWeights(
+        arrival_sync=0.5,
+        stops=0.3,
+        travel_time=0.2,
+    )
+
+    ranked = rank_meeting_itineraries(
+        flights,
+        traveler_a,
+        traveler_b,
+        constraints,
+        weights,
+    )
+
+    assert len(ranked) == 1
+    assert ranked[0].itinerary_a.destination == "AUS"
+    assert ranked[0].itinerary_b.destination == "AUS"
+    assert ranked[0].total_score == 1.0
