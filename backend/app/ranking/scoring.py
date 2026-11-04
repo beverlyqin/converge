@@ -238,7 +238,7 @@ def rank_destinations(
     pairs: list[tuple[Itinerary, Itinerary]],
     weights: RankingWeights,
 ) -> list[tuple[str, ScoredItineraryPair, int, float]]:
-    """Rank destinations using best-pair quality and backup flexibility."""
+    """Rank destinations using best pair quality and backup flexibility."""
 
     summaries = summarize_destinations(
         pairs,
@@ -273,3 +273,24 @@ def rank_destinations(
     )
 
     return ranked
+
+def rank_meeting_destinations(
+    flights: list[FlightSegment],
+    traveler_a: TravelerRequest,
+    traveler_b: TravelerRequest,
+    constraints: SearchConstraints,
+    weights: RankingWeights,
+) -> list[tuple[str, ScoredItineraryPair, int, float]]:
+    """Find feasible meetup options and rank destinations."""
+
+    pairs = search_meeting_itineraries(
+        flights,
+        traveler_a,
+        traveler_b,
+        constraints,
+    )
+
+    return rank_destinations(
+        pairs,
+        weights,
+    )

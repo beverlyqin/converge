@@ -5,7 +5,7 @@ from backend.app.domain.models import TravelerRequest, SearchConstraints, Flight
 from backend.app.providers.mock import load_mock_flights
 from backend.app.routing.itineraries import search_meeting_itineraries
 from backend.app.ranking.metrics import calculate_ranking_metrics
-from backend.app.ranking.scoring import DestinationCandidate, RankingWeights, normalize_lower_is_better, score_itinerary_pairs, rank_meeting_itineraries, group_pairs_by_destination, get_backup_option_count, summarize_destinations, normalize_higher_is_better, rank_destinations
+from backend.app.ranking.scoring import DestinationCandidate, RankingWeights, normalize_lower_is_better, score_itinerary_pairs, rank_meeting_itineraries, group_pairs_by_destination, get_backup_option_count, summarize_destinations, normalize_higher_is_better, rank_destinations, rank_meeting_destinations
 
 def test_calculate_ranking_metrics():
     flights = load_mock_flights()
@@ -610,3 +610,49 @@ def test_rank_destinations_ignores_backups_when_weight_is_zero():
 
     assert ranked[0][0] == "DEN"
     assert ranked[1][0] == "AUS"
+
+def test_rank_meeting_destinations():
+    flights = load_mock_flights()
+
+    traveler_a = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+
+    traveler_b = TravelerRequest(
+        origin="SEA",
+        depart_after="2026-11-13T16:00:00-08:00",
+        depart_before="2026-11-13T23:59:00-08:00",
+    )
+
+    constraints = SearchConstraints(
+        max_stops=0,
+        max_travel_time_minutes=300,
+        max_arrival_gap_minutes=120,
+    )
+
+    weights = RankingWeights(
+        arrival_sync=0.5,
+        stops=0.3,
+        travel_time=0.2,
+        backup_options=0.0,
+    )
+
+    ranked = rank_meeting_destinations(
+        flights,
+        traveler_a,
+        traveler_b,
+        constraints,
+        weights,
+    )
+
+    assert len(ranked) == 1
+
+    destination, best_pair, backup_count, destination_score = ranked[0]
+
+    assert destination == "AUS"
+    assert best_pair.itinerary_a.destination == "AUS"
+    assert best_pair.itinerary_b.destination == "AUS"
+    assert backup_count == 0
+    assert destination_score == 1.0
