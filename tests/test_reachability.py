@@ -1,4 +1,6 @@
-from backend.app.providers.mock import load_mock_flights
+from datetime import datetime
+
+from backend.app.providers.mock import MockFlightProvider, load_mock_flights
 from backend.app.routing.reachability import find_common_destinations, get_available_flights, get_return_flights
 from backend.app.domain.models import FlightSegment, Itinerary, TravelerRequest, SearchConstraints
 from backend.app.routing.itineraries import (
@@ -471,3 +473,26 @@ def test_search_meeting_itineraries_requires_feasible_return():
     assert len(pairs) == 1
     assert pairs[0][0].destination == "AUS"
     assert pairs[0][1].destination == "AUS"
+
+def test_mock_flight_provider_filters_by_origin_and_time():
+    provider = MockFlightProvider()
+
+    flights = provider.get_flights(
+        origin="JFK",
+        depart_after=datetime.fromisoformat(
+            "2026-11-13T17:00:00-05:00"
+        ),
+        depart_before=datetime.fromisoformat(
+            "2026-11-13T17:45:00-05:00"
+        ),
+    )
+
+    flight_numbers = {
+        flight.flight_number
+        for flight in flights
+    }
+
+    assert flight_numbers == {
+        "DL123",
+        "DL610",
+    }
