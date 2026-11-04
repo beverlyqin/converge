@@ -26,10 +26,12 @@ class MockFlightProvider(FlightProvider):
         depart_after: datetime,
         depart_before: datetime,
     ) -> list[FlightSegment]:
+        """Return Delta-operated flights in the requested window."""
         return [
             flight
             for flight in self.flights
             if flight.origin == origin
+            and flight.operating_carrier == "DL"
             and depart_after <= flight.departure_time <= depart_before
         ]
 
