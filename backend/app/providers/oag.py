@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timezone
+from urllib.parse import parse_qs, urlparse
 
 import httpx
 
@@ -33,7 +34,6 @@ class OAGFlightProvider(FlightProvider):
             "Codeshare": "Operating",
             "FlightType": "Scheduled",
             "CodeType": "IATA",
-            "Limit": 1000,
             "version": "v2",
         }
 
@@ -42,29 +42,75 @@ class OAGFlightProvider(FlightProvider):
         }
 
         flights = []
-        next_url = self.BASE_URL
-        next_params = params
+        after = None
 
-        while next_url:
-            response = httpx.get(
-                next_url,
-                headers=headers,
-                params=next_params,
-                timeout=30.0,
-            )
+        while True:
+            request_params = params.copy()
 
-            response.raise_for_status()
+            if after is not None:
+                request_params["After"] = after
+
+            response = None
+
+            for attempt in range(3):
+                try:
+                    response = httpx.get(
+                        self.BASE_URL,
+                        headers=headers,
+                        params=request_params,
+                        timeout=30.0,
+                        trust_env=False,
+                    )
+                    break
+
+                except (
+                    httpx.ConnectError,
+                    httpx.RemoteProtocolError,
+                    httpx.ReadTimeout,
+                ):
+                    if attempt == 2:
+                        raise
+
+            try:
+                response.raise_for_status()
+            except httpx.HTTPStatusError as error:
+                raise RuntimeError(
+                    f"OAG request failed: "
+                    f"{error.response.status_code} "
+                    f"{error.response.text}"
+                ) from error
 
             payload = response.json()
 
             for item in payload.get("data", []):
+                number_of_stops = (
+                    item.get("segmentInfo", {})
+                    .get("numberOfStops", 0)
+                )
+
+                if number_of_stops != 0:
+                    continue
+
                 flight = parse_oag_flight(item)
 
                 if flight.operating_carrier == "DL":
                     flights.append(flight)
 
-            next_url = payload.get("paging", {}).get("next")
-            next_params = None
+            next_link = payload.get("paging", {}).get("next")
+
+            if not next_link:
+                break
+
+            query = parse_qs(
+                urlparse(next_link).query
+            )
+
+            after_values = query.get("After")
+
+            if not after_values:
+                break
+
+            after = after_values[0]
 
         return flights
 

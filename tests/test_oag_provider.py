@@ -90,7 +90,7 @@ def test_oag_provider_get_flights(monkeypatch):
                 "paging": {},
             }
 
-    def fake_get(url, headers, params, timeout):
+    def fake_get(url, headers, params, timeout, **kwargs):
         return FakeResponse()
 
     monkeypatch.setattr(
