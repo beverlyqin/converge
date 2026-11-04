@@ -227,3 +227,37 @@ def test_rank_meeting_itineraries():
     assert ranked[0].itinerary_a.destination == "AUS"
     assert ranked[0].itinerary_b.destination == "AUS"
     assert ranked[0].total_score == 1.0
+
+def test_search_meeting_itineraries_rejects_infeasible_return():
+    flights = load_mock_flights()
+
+    traveler_a = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+        return_after="2026-11-15T18:00:00-06:00",
+        return_before="2026-11-15T23:59:00-06:00",
+    )
+
+    traveler_b = TravelerRequest(
+        origin="SEA",
+        depart_after="2026-11-13T16:00:00-08:00",
+        depart_before="2026-11-13T23:59:00-08:00",
+        return_after="2026-11-15T18:00:00-06:00",
+        return_before="2026-11-15T23:59:00-06:00",
+    )
+
+    constraints = SearchConstraints(
+        max_stops=0,
+        max_travel_time_minutes=300,
+        max_arrival_gap_minutes=120,
+    )
+
+    pairs = search_meeting_itineraries(
+        flights,
+        traveler_a,
+        traveler_b,
+        constraints,
+    )
+
+    assert pairs == []
