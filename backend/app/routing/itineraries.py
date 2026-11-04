@@ -5,7 +5,10 @@ from backend.app.domain.models import (
     TravelerRequest,
     SearchConstraints,
 )
-from backend.app.routing.reachability import get_available_flights
+from backend.app.routing.reachability import (
+    get_available_flights,
+    has_feasible_return,
+)
 
 def get_one_stop_itineraries(
     flights: list[FlightSegment],
@@ -160,25 +163,49 @@ def search_meeting_itineraries(
     traveler_b: TravelerRequest,
     constraints: SearchConstraints,
 ) -> list[tuple[Itinerary, Itinerary]]:
+    """Find feasible meetup itinerary pairs"""
     itineraries_a = get_itineraries(flights, traveler_a)
     itineraries_b = get_itineraries(flights, traveler_b)
-
+    itineraries_a = filter_by_return_feasibility(
+        itineraries_a,
+        flights,
+        traveler_a,
+    )
+    itineraries_b = filter_by_return_feasibility(
+        itineraries_b,
+        flights,
+        traveler_b,
+    )
     itineraries_a = apply_itinerary_constraints(
         itineraries_a,
         constraints,
     )
-
     itineraries_b = apply_itinerary_constraints(
         itineraries_b,
         constraints,
     )
-
     pairs = get_matching_itinerary_pairs(
         itineraries_a,
         itineraries_b,
     )
-
     return apply_pair_constraints(
         pairs,
         constraints,
     )
+
+def filter_by_return_feasibility(
+    itineraries: list[Itinerary],
+    flights: list[FlightSegment],
+    traveler: TravelerRequest,
+) -> list[Itinerary]:
+    """Keep itineraries iff destination has a feasible return"""
+
+    return [
+        itinerary
+        for itinerary in itineraries
+        if has_feasible_return(
+            flights,
+            traveler,
+            itinerary.destination,
+        )
+    ]
