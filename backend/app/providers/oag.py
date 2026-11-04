@@ -1,4 +1,5 @@
 import os
+import time
 from datetime import datetime, timezone
 from urllib.parse import parse_qs, urlparse
 
@@ -52,7 +53,7 @@ class OAGFlightProvider(FlightProvider):
 
             response = None
 
-            for attempt in range(3):
+            for attempt in range(4):
                 try:
                     response = httpx.get(
                         self.BASE_URL,
@@ -61,24 +62,40 @@ class OAGFlightProvider(FlightProvider):
                         timeout=30.0,
                         trust_env=False,
                     )
+
+                    response.raise_for_status()
                     break
+
+                except httpx.HTTPStatusError as error:
+                    if error.response.status_code != 429:
+                        raise RuntimeError(
+                            f"OAG request failed: "
+                            f"{error.response.status_code} "
+                            f"{error.response.text}"
+                        ) from error
+
+                    if attempt == 3:
+                        raise RuntimeError(
+                            f"OAG rate limit exceeded: "
+                            f"{error.response.text}"
+                        ) from error
+
+                    retry_after = int(
+                        error.response.headers.get(
+                            "Retry-After",
+                            "5",
+                        )
+                    )
+
+                    time.sleep(retry_after)
 
                 except (
                     httpx.ConnectError,
                     httpx.RemoteProtocolError,
                     httpx.ReadTimeout,
                 ):
-                    if attempt == 2:
+                    if attempt == 3:
                         raise
-
-            try:
-                response.raise_for_status()
-            except httpx.HTTPStatusError as error:
-                raise RuntimeError(
-                    f"OAG request failed: "
-                    f"{error.response.status_code} "
-                    f"{error.response.text}"
-                ) from error
 
             payload = response.json()
 
