@@ -235,3 +235,42 @@ def get_return_search_window(
             destination_timezone
         ),
     )
+
+def collect_return_schedules(
+    provider: FlightProvider,
+    traveler: TravelerRequest,
+    destinations: set[str],
+) -> list[FlightSegment]:
+    """Fetch return schedules only from candidate destinations"""
+
+    if (
+        traveler.return_after is None
+        and traveler.return_before is None
+    ):
+        return []
+
+    if (
+        traveler.return_after is None
+        or traveler.return_before is None
+    ):
+        raise ValueError(
+            "Traveler must provide both return_after and return_before."
+        )
+
+    return_flights = []
+
+    for destination in sorted(destinations):
+        depart_after, depart_before = get_return_search_window(
+            traveler,
+            destination,
+        )
+
+        return_flights.extend(
+            provider.get_flights(
+                origin=destination,
+                depart_after=depart_after,
+                depart_before=depart_before,
+            )
+        )
+
+    return return_flights

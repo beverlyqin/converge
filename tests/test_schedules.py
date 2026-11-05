@@ -12,6 +12,7 @@ from backend.app.providers.schedules import (
     get_connection_window,
     select_connection_first_legs,
     get_return_search_window,
+    collect_return_schedules,
 )
 from backend.app.routing.itineraries import get_itineraries
 
@@ -484,3 +485,42 @@ def test_get_return_search_window_uses_destination_timezone():
 
     assert return_after.isoformat() == "2026-11-15T14:00:00-08:00"
     assert return_before.isoformat() == "2026-11-15T20:00:00-08:00"
+
+def test_collect_return_schedules_only_queries_candidate_destinations():
+    class FakeFlightProvider:
+        def __init__(self):
+            self.calls = []
+
+        def get_flights(
+            self,
+            origin,
+            depart_after,
+            depart_before,
+        ):
+            self.calls.append(origin)
+            return []
+
+    provider = FakeFlightProvider()
+
+    traveler = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+        return_after="2026-11-15T17:00:00-05:00",
+        return_before="2026-11-15T23:00:00-05:00",
+    )
+
+    collect_return_schedules(
+        provider,
+        traveler,
+        {
+            "MIA",
+            "LAX",
+            "MIA",
+        },
+    )
+
+    assert provider.calls == [
+        "LAX",
+        "MIA",
+    ]
