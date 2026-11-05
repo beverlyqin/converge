@@ -11,6 +11,7 @@ from backend.app.providers.schedules import (
     get_connection_search_windows,
     get_connection_window,
     select_connection_first_legs,
+    get_return_search_window,
 )
 from backend.app.routing.itineraries import get_itineraries
 
@@ -466,3 +467,20 @@ def test_collected_schedules_build_one_stop_itinerary():
         assert itinerary.segments[0].destination == "ATL"
         assert itinerary.segments[1].origin == "ATL"
         assert itinerary.segments[1].destination == "MIA"
+
+def test_get_return_search_window_uses_destination_timezone():
+    traveler = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+        return_after="2026-11-15T17:00:00-05:00",
+        return_before="2026-11-15T23:00:00-05:00",
+    )
+
+    return_after, return_before = get_return_search_window(
+        traveler,
+        "LAX",
+    )
+
+    assert return_after.isoformat() == "2026-11-15T14:00:00-08:00"
+    assert return_before.isoformat() == "2026-11-15T20:00:00-08:00"

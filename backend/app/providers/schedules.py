@@ -208,3 +208,30 @@ def select_connection_first_legs(
         for flight in first_leg_flights
         if flight.destination in selected_airports
     ]
+
+def get_return_search_window(
+    traveler: TravelerRequest,
+    destination: str,
+) -> tuple:
+    """Return the destination local window for return departures"""
+
+    if (
+        traveler.return_after is None
+        or traveler.return_before is None
+    ):
+        raise ValueError(
+            "Traveler does not have a complete return window."
+        )
+
+    destination_timezone = get_airport_timezone(
+        destination
+    )
+
+    return (
+        traveler.return_after.astimezone(
+            destination_timezone
+        ),
+        traveler.return_before.astimezone(
+            destination_timezone
+        ),
+    )
