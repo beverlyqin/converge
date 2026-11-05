@@ -135,3 +135,38 @@ def test_get_connection_search_windows_merges_overlapping_windows():
 
     assert start.isoformat() == "2026-11-13T20:30:00-05:00"
     assert end.isoformat() == "2026-11-14T00:15:00-05:00"
+
+def test_get_connection_search_windows_keeps_non_overlapping_windows_separate():
+    flights = [
+        FlightSegment(
+            flight_number="DL610",
+            operating_carrier="DL",
+            origin="JFK",
+            destination="ATL",
+            departure_time="2026-11-13T12:00:00+00:00",
+            arrival_time="2026-11-13T14:00:00+00:00",
+        ),
+        FlightSegment(
+            flight_number="DL620",
+            operating_carrier="DL",
+            origin="JFK",
+            destination="ATL",
+            departure_time="2026-11-13T22:00:00+00:00",
+            arrival_time="2026-11-14T00:00:00+00:00",
+        ),
+    ]
+
+    windows = get_connection_search_windows(flights)
+
+    atl_windows = windows["ATL"]
+
+    assert len(atl_windows) == 2
+
+    first_start, first_end = atl_windows[0]
+    second_start, second_end = atl_windows[1]
+
+    assert first_start.isoformat() == "2026-11-13T09:45:00-05:00"
+    assert first_end.isoformat() == "2026-11-13T13:00:00-05:00"
+
+    assert second_start.isoformat() == "2026-11-13T19:45:00-05:00"
+    assert second_end.isoformat() == "2026-11-13T23:00:00-05:00"
