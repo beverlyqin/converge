@@ -13,13 +13,19 @@ class OAGFlightProvider(FlightProvider):
 
     BASE_URL = "https://api.oag.com/flight-instances/"
 
-    def __init__(self, api_key: str | None = None):
+    def __init__(
+        self,
+        api_key: str | None = None,
+        max_requests: int = 25,
+    ):
         self.api_key = api_key or os.getenv("OAG_API_KEY")
 
         if not self.api_key:
             raise ValueError("OAG_API_KEY is not set.")
 
+        self.max_requests = max_requests
         self.request_count = 0
+
         self._cache: dict[
             tuple[str, str, str],
             list[FlightSegment],
@@ -72,8 +78,12 @@ class OAGFlightProvider(FlightProvider):
 
             for attempt in range(4):
                 try:
+                    if self.request_count >= self.max_requests:
+                        raise RuntimeError(
+                            f"OAG request budget exceeded: "
+                            f"{self.request_count}/{self.max_requests}"
+                        )
                     self.request_count += 1
-
                     response = httpx.get(
                         self.BASE_URL,
                         headers=headers,

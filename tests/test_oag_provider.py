@@ -1,3 +1,4 @@
+import pytest
 from datetime import datetime, timezone
 
 from backend.app.providers.oag import OAGFlightProvider, parse_oag_flight
@@ -212,4 +213,54 @@ def test_oag_provider_caches_identical_queries(monkeypatch):
 
     assert first == second
     assert call_count == 1
+    assert provider.request_count == 1
+
+def test_oag_provider_enforces_request_budget(monkeypatch):
+    class FakeResponse:
+        status_code = 200
+        headers = {}
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {
+                "data": [],
+                "paging": {
+                    "next": (
+                        "https://api.oag.com/flight-instances/"
+                        "?After=next-page"
+                    )
+                },
+            }
+
+    def fake_get(*args, **kwargs):
+        return FakeResponse()
+
+    monkeypatch.setattr(
+        "backend.app.providers.oag.httpx.get",
+        fake_get,
+    )
+
+    provider = OAGFlightProvider(
+        api_key="fake-key",
+        max_requests=1,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="OAG request budget exceeded",
+    ):
+        provider.get_flights(
+            origin="JFK",
+            depart_after=datetime(
+                2026, 11, 13, 17, 0,
+                tzinfo=timezone.utc,
+            ),
+            depart_before=datetime(
+                2026, 11, 13, 23, 59,
+                tzinfo=timezone.utc,
+            ),
+        )
+
     assert provider.request_count == 1
