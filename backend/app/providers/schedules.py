@@ -3,10 +3,22 @@ from datetime import timedelta
 from backend.app.airports.timezones import get_airport_timezone
 from backend.app.domain.models import (
     FlightSegment,
+    SearchConstraints,
     TravelerRequest,
 )
 from backend.app.providers.base import FlightProvider
 
+DELTA_HUB_AIRPORTS = {
+    "ATL",
+    "BOS",
+    "DTW",
+    "LAX",
+    "LGA",
+    "JFK",
+    "MSP",
+    "SEA",
+    "SLC",
+}
 
 def collect_direct_schedules(
     provider: FlightProvider,
@@ -108,3 +120,91 @@ def get_connection_search_windows(
         merged_by_airport[airport] = merged_windows
 
     return merged_by_airport
+
+def collect_connection_schedules(
+    provider: FlightProvider,
+    first_leg_flights: list[FlightSegment],
+) -> list[FlightSegment]:
+    """Fetch connection schedules using merged airport search windows"""
+
+    connection_flights = []
+
+    windows_by_airport = get_connection_search_windows(
+        first_leg_flights
+    )
+
+    for airport, windows in windows_by_airport.items():
+        for depart_after, depart_before in windows:
+            connection_flights.extend(
+                provider.get_flights(
+                    origin=airport,
+                    depart_after=depart_after,
+                    depart_before=depart_before,
+                )
+            )
+
+    return connection_flights
+
+def collect_traveler_schedules(
+    provider: FlightProvider,
+    traveler: TravelerRequest,
+    constraints: SearchConstraints,
+) -> list[FlightSegment]:
+    """Collect the schedules required for one traveler."""
+
+    first_leg_flights = provider.get_flights(
+        origin=traveler.origin,
+        depart_after=traveler.depart_after,
+        depart_before=traveler.depart_before,
+    )
+
+    if constraints.max_stops == 0:
+        return first_leg_flights
+
+    selected_first_legs = select_connection_first_legs(
+        first_leg_flights,
+        max_airports=4,
+    )
+
+    connection_flights = collect_connection_schedules(
+        provider,
+        selected_first_legs,
+    )
+
+    return first_leg_flights + connection_flights
+
+def select_connection_first_legs(
+    first_leg_flights: list[FlightSegment],
+    max_airports: int = 4,
+) -> list[FlightSegment]:
+    """Select a bounded set of first legs into Delta hubs."""
+
+    flight_counts = {}
+
+    for flight in first_leg_flights:
+        airport = flight.destination
+
+        if airport not in DELTA_HUB_AIRPORTS:
+            continue
+
+        flight_counts[airport] = (
+            flight_counts.get(airport, 0) + 1
+        )
+
+    ranked_airports = sorted(
+        flight_counts,
+        key=lambda airport: (
+            -flight_counts[airport],
+            airport,
+        ),
+    )
+
+    selected_airports = set(
+        ranked_airports[:max_airports]
+    )
+
+    return [
+        flight
+        for flight in first_leg_flights
+        if flight.destination in selected_airports
+    ]
