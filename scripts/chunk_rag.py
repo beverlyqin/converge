@@ -1,5 +1,6 @@
 import json
 import nltk
+import re
 from pathlib import Path
 from collections import Counter
 
@@ -94,11 +95,27 @@ for section_document in section_documents:
         max_tokens=200,
     )
 
-    for text in section_chunks:
+    section = section_document.metadata["section"]
+
+    section_slug = re.sub(
+        r"[^a-z0-9]+",
+        "_",
+        section.lower(),
+    ).strip("_")
+
+    for chunk_number, text in enumerate(section_chunks, start=1):
+        metadata = section_document.metadata.copy()
+
+        metadata["chunk_id"] = (
+            f'{source["id"]}::'
+            f"{section_slug}::"
+            f"{chunk_number}"
+        )
+
         chunks.append(
             Document(
                 page_content=text,
-                metadata=section_document.metadata.copy(),
+                metadata=metadata,
             )
         )
 
@@ -171,3 +188,13 @@ chunks_path.write_text(
 )
 
 print(f"Saved {len(chunks)} chunks to: {chunks_path}")
+
+for chunk in chunks:
+    section = chunk.metadata.get("section")
+
+    if section in {
+        "The Centurion Lounge",
+        "Delta Sky Club",
+    }:
+        print("\n" + chunk.metadata["chunk_id"])
+        print(chunk.page_content)

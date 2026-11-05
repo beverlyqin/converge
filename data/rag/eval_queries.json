@@ -1,0 +1,69 @@
+[
+    {
+      "question": "How many Delta Sky Club visits do I get each year with an Amex Platinum?",
+      "relevant_chunk_ids": [
+        "amex_platinum_lounge_terms::delta_sky_club::1"
+      ]
+    },
+    {
+      "question": "What counts as one Delta Sky Club visit?",
+      "relevant_chunk_ids": [
+        "amex_platinum_lounge_terms::delta_sky_club::2"
+      ]
+    },
+    {
+      "question": "Can I enter a Delta Sky Club with a Basic Economy ticket?",
+      "relevant_chunk_ids": [
+        "amex_platinum_lounge_terms::delta_sky_club::2",
+        "amex_platinum_lounge_terms::delta_sky_club::8"
+      ]
+    },
+    {
+      "question": "Can I bring guests into a Delta Sky Club with my Amex Platinum?",
+      "relevant_chunk_ids": [
+        "amex_platinum_lounge_terms::delta_sky_club::4"
+      ]
+    },
+    {
+      "question": "How much do I need to spend to get unlimited Delta Sky Club access?",
+      "relevant_chunk_ids": [
+        "amex_platinum_lounge_terms::delta_sky_club::5"
+      ]
+    },
+    {
+      "question": "How early before my Delta flight can I enter a Sky Club?",
+      "relevant_chunk_ids": [
+        "amex_platinum_lounge_terms::delta_sky_club::9"
+      ]
+    },
+    {
+      "question": "Does an Amex Platinum give me access to the American Express Global Lounge Collection?",
+      "relevant_chunk_ids": [
+        "amex_platinum_lounge_terms::the_american_express_global_lounge_collection::1"
+      ]
+    },
+    {
+      "question": "How early before my flight can I enter a Centurion Lounge?",
+      "relevant_chunk_ids": [
+        "amex_platinum_lounge_terms::the_centurion_lounge::1"
+      ]
+    },
+    {
+      "question": "What do I need to show to enter a Centurion Lounge?",
+      "relevant_chunk_ids": [
+        "amex_platinum_lounge_terms::the_centurion_lounge::1"
+      ]
+    },
+    {
+      "question": "How much does it cost to bring a guest into a Centurion Lounge?",
+      "relevant_chunk_ids": [
+        "amex_platinum_lounge_terms::the_centurion_lounge::4"
+      ]
+    },
+    {
+      "question": "How much do I need to spend to get complimentary Centurion Lounge guest access?",
+      "relevant_chunk_ids": [
+        "amex_platinum_lounge_terms::the_centurion_lounge::5"
+      ]
+    }
+  ]
