@@ -375,3 +375,50 @@ def test_search_meetup_itineraries_fetches_returns_after_outbound_match():
     assert set(provider.calls[2:]) == {
         "MIA",
     }
+
+def test_one_way_search_does_not_fetch_returns():
+    class CountingProvider(FakeFlightProvider):
+        def __init__(self):
+            self.calls = []
+
+        def get_flights(
+            self,
+            origin,
+            depart_after,
+            depart_before,
+        ):
+            self.calls.append(origin)
+
+            return super().get_flights(
+                origin,
+                depart_after,
+                depart_before,
+            )
+
+    provider = CountingProvider()
+
+    traveler_a = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+
+    traveler_b = TravelerRequest(
+        origin="SEA",
+        depart_after="2026-11-13T14:00:00-08:00",
+        depart_before="2026-11-13T20:00:00-08:00",
+    )
+
+    constraints = SearchConstraints(
+        max_stops=1,
+        max_arrival_gap_minutes=60,
+    )
+
+    search_meetup_itineraries(
+        provider,
+        traveler_a,
+        traveler_b,
+        constraints,
+    )
+
+    assert "MIA" not in provider.calls
