@@ -52,6 +52,9 @@ def test_parse_oag_flight():
 
 def test_oag_provider_get_flights(monkeypatch):
     class FakeResponse:
+        status_code = 200
+        headers = {}
+
         def raise_for_status(self):
             pass
 
@@ -84,6 +87,9 @@ def test_oag_provider_get_flights(monkeypatch):
                             "time": {
                                 "utc": "01:35:00",
                             },
+                        },
+                        "segmentInfo": {
+                            "numberOfStops": 0,
                         },
                     }
                 ],
@@ -118,3 +124,92 @@ def test_oag_provider_get_flights(monkeypatch):
     assert flights[0].flight_number == "DL123"
     assert flights[0].origin == "JFK"
     assert flights[0].destination == "AUS"
+
+
+def test_oag_provider_caches_identical_queries(monkeypatch):
+    call_count = 0
+
+    class FakeResponse:
+        status_code = 200
+        headers = {}
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {
+                "data": [
+                    {
+                        "carrier": {
+                            "iata": "DL",
+                        },
+                        "flightNumber": "123",
+                        "departure": {
+                            "airport": {
+                                "iata": "JFK",
+                            },
+                            "date": {
+                                "utc": "2026-11-13",
+                            },
+                            "time": {
+                                "utc": "22:30:00",
+                            },
+                        },
+                        "arrival": {
+                            "airport": {
+                                "iata": "AUS",
+                            },
+                            "date": {
+                                "utc": "2026-11-14",
+                            },
+                            "time": {
+                                "utc": "01:35:00",
+                            },
+                        },
+                        "segmentInfo": {
+                            "numberOfStops": 0,
+                        },
+                    }
+                ],
+                "paging": {},
+            }
+
+    def fake_get(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        return FakeResponse()
+
+    monkeypatch.setattr(
+        "backend.app.providers.oag.httpx.get",
+        fake_get,
+    )
+
+    provider = OAGFlightProvider(
+        api_key="fake-key",
+    )
+
+    depart_after = datetime(
+        2026, 11, 13, 17, 0,
+        tzinfo=timezone.utc,
+    )
+
+    depart_before = datetime(
+        2026, 11, 13, 23, 59,
+        tzinfo=timezone.utc,
+    )
+
+    first = provider.get_flights(
+        origin="JFK",
+        depart_after=depart_after,
+        depart_before=depart_before,
+    )
+
+    second = provider.get_flights(
+        origin="JFK",
+        depart_after=depart_after,
+        depart_before=depart_before,
+    )
+
+    assert first == second
+    assert call_count == 1
+    assert provider.request_count == 1

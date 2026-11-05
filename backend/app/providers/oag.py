@@ -19,12 +19,29 @@ class OAGFlightProvider(FlightProvider):
         if not self.api_key:
             raise ValueError("OAG_API_KEY is not set.")
 
+        self.request_count = 0
+        self._cache: dict[
+            tuple[str, str, str],
+            list[FlightSegment],
+        ] = {}
+
     def get_flights(
         self,
         origin: str,
         depart_after: datetime,
         depart_before: datetime,
     ) -> list[FlightSegment]:
+        origin = origin.upper()
+
+        cache_key = (
+            origin,
+            depart_after.isoformat(),
+            depart_before.isoformat(),
+        )
+
+        if cache_key in self._cache:
+            return list(self._cache[cache_key])
+
         params = {
             "DepartureDateTime": (
                 f"{depart_after.strftime('%Y-%m-%dT%H:%M')}/"
@@ -55,6 +72,8 @@ class OAGFlightProvider(FlightProvider):
 
             for attempt in range(4):
                 try:
+                    self.request_count += 1
+
                     response = httpx.get(
                         self.BASE_URL,
                         headers=headers,
@@ -128,6 +147,8 @@ class OAGFlightProvider(FlightProvider):
                 break
 
             after = after_values[0]
+
+        self._cache[cache_key] = list(flights)
 
         return flights
 
