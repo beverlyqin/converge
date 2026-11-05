@@ -66,3 +66,45 @@ def get_connection_window(
     depart_before = local_arrival + timedelta(hours=4)
 
     return depart_after, depart_before
+
+def get_connection_search_windows(
+    first_leg_flights: list[FlightSegment],
+) -> dict[str, list[tuple]]:
+    """Group & merge overlapping connection windows by airport"""
+
+    windows_by_airport = {}
+
+    for flight in first_leg_flights:
+        airport = flight.destination
+        window = get_connection_window(flight)
+
+        if airport not in windows_by_airport:
+            windows_by_airport[airport] = []
+
+        windows_by_airport[airport].append(window)
+
+    merged_by_airport = {}
+
+    for airport, windows in windows_by_airport.items():
+        windows.sort(key=lambda window: window[0])
+
+        merged_windows = []
+
+        for start, end in windows:
+            if not merged_windows:
+                merged_windows.append((start, end))
+                continue
+
+            previous_start, previous_end = merged_windows[-1]
+
+            if start <= previous_end:
+                merged_windows[-1] = (
+                    previous_start,
+                    max(previous_end, end),
+                )
+            else:
+                merged_windows.append((start, end))
+
+        merged_by_airport[airport] = merged_windows
+
+    return merged_by_airport

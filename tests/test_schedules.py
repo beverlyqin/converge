@@ -5,11 +5,8 @@ from backend.app.domain.models import (
 from backend.app.providers.schedules import (
     collect_direct_schedules,
     get_connection_airports,
-)
-from backend.app.providers.schedules import (
-    collect_direct_schedules,
-    get_connection_airports,
     get_connection_window,
+    get_connection_search_windows,
 )
 
 class FakeFlightProvider:
@@ -107,3 +104,34 @@ def test_get_connection_window_uses_connection_airport_local_time():
 
     assert depart_after.isoformat() == "2026-11-13T20:30:00-05:00"
     assert depart_before.isoformat() == "2026-11-13T23:45:00-05:00"
+
+def test_get_connection_search_windows_merges_overlapping_windows():
+    flights = [
+        FlightSegment(
+            flight_number="DL610",
+            operating_carrier="DL",
+            origin="JFK",
+            destination="ATL",
+            departure_time="2026-11-13T22:15:00+00:00",
+            arrival_time="2026-11-14T00:45:00+00:00",
+        ),
+        FlightSegment(
+            flight_number="DL620",
+            operating_carrier="DL",
+            origin="JFK",
+            destination="ATL",
+            departure_time="2026-11-13T22:45:00+00:00",
+            arrival_time="2026-11-14T01:15:00+00:00",
+        ),
+    ]
+
+    windows = get_connection_search_windows(flights)
+
+    atl_windows = windows["ATL"]
+
+    assert len(atl_windows) == 1
+
+    start, end = atl_windows[0]
+
+    assert start.isoformat() == "2026-11-13T20:30:00-05:00"
+    assert end.isoformat() == "2026-11-14T00:15:00-05:00"
