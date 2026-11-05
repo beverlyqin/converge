@@ -209,3 +209,40 @@ def filter_by_return_feasibility(
             itinerary.destination,
         )
     ]
+
+def search_outbound_meeting_itineraries(
+        flights, 
+        traveler_a,
+        traveler_b,
+        constraints,
+):
+    """Find feasible outbound meetup pairs without checking returns"""
+    itineraries_a = get_itineraries(
+        flights,
+        traveler_a,
+    )
+
+    itineraries_b = get_itineraries(
+        flights,
+        traveler_b,
+    )
+
+    itineraries_a = apply_itinerary_constraints(
+        itineraries_a,
+        constraints,
+    )
+
+    itineraries_b = apply_itinerary_constraints(
+        itineraries_b,
+        constraints,
+    )
+
+    pairs = get_matching_itinerary_pairs(
+        itineraries_a,
+        itineraries_b,
+    )
+
+    return apply_pair_constraints(
+        pairs,
+        constraints,
+    )
