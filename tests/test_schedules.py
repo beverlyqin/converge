@@ -12,6 +12,7 @@ from backend.app.providers.schedules import (
     get_connection_window,
     select_connection_first_legs,
 )
+from backend.app.routing.itineraries import get_itineraries
 
 class FakeFlightProvider:
     def __init__(self):
@@ -385,3 +386,83 @@ def test_collect_traveler_schedules_fetches_bounded_connections():
     ]
 
     assert len(flights) == 3
+
+def test_collected_schedules_build_one_stop_itinerary():
+    class FakeFlightProvider:
+        def get_flights(
+            self,
+            origin,
+            depart_after,
+            depart_before,
+        ):
+            if origin == "JFK":
+                return [
+                    FlightSegment(
+                        flight_number="DL100",
+                        operating_carrier="DL",
+                        origin="JFK",
+                        destination="ATL",
+                        departure_time="2026-11-13T22:00:00+00:00",
+                        arrival_time="2026-11-14T00:30:00+00:00",
+                    ),
+                    FlightSegment(
+                        flight_number="DL101",
+                        operating_carrier="DL",
+                        origin="JFK",
+                        destination="ATL",
+                        departure_time="2026-11-13T22:30:00+00:00",
+                        arrival_time="2026-11-14T01:00:00+00:00",
+                    ),
+                ]
+
+            if origin == "ATL":
+                return [
+                    FlightSegment(
+                        flight_number="DL200",
+                        operating_carrier="DL",
+                        origin="ATL",
+                        destination="MIA",
+                        departure_time="2026-11-13T21:30:00-05:00",
+                        arrival_time="2026-11-13T23:20:00-05:00",
+                    )
+                ]
+
+            return []
+
+    provider = FakeFlightProvider()
+
+    traveler = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+
+    constraints = SearchConstraints(
+        max_stops=1,
+    )
+
+    flights = collect_traveler_schedules(
+        provider,
+        traveler,
+        constraints,
+    )
+
+    itineraries = get_itineraries(
+        flights,
+        traveler,
+    )
+
+    mia_itineraries = [
+        itinerary
+        for itinerary in itineraries
+        if itinerary.destination == "MIA"
+    ]
+
+    assert len(mia_itineraries) == 2
+
+    for itinerary in mia_itineraries:
+        assert itinerary.stops == 1
+        assert itinerary.segments[0].origin == "JFK"
+        assert itinerary.segments[0].destination == "ATL"
+        assert itinerary.segments[1].origin == "ATL"
+        assert itinerary.segments[1].destination == "MIA"
