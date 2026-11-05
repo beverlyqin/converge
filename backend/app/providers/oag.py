@@ -57,6 +57,7 @@ class OAGFlightProvider(FlightProvider):
             "CarrierCode": "DL",
             "Codeshare": "Operating",
             "FlightType": "Scheduled",
+            "ServiceType": "J,S",
             "CodeType": "IATA",
             "version": "v2",
         }
