@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+from backend.app.airports.timezones import get_airport_timezone
 from backend.app.domain.models import (
     FlightSegment,
     TravelerRequest,
@@ -44,3 +47,22 @@ def get_connection_airports(
         flight.destination
         for flight in first_leg_flights
     }
+
+def get_connection_window(
+    first_leg: FlightSegment,
+) -> tuple:
+    """Return local departure window for a connecting flight"""
+
+    connection_airport = first_leg.destination
+    connection_timezone = get_airport_timezone(
+        connection_airport
+    )
+
+    local_arrival = first_leg.arrival_time.astimezone(
+        connection_timezone
+    )
+
+    depart_after = local_arrival + timedelta(minutes=45)
+    depart_before = local_arrival + timedelta(hours=4)
+
+    return depart_after, depart_before

@@ -6,6 +6,11 @@ from backend.app.providers.schedules import (
     collect_direct_schedules,
     get_connection_airports,
 )
+from backend.app.providers.schedules import (
+    collect_direct_schedules,
+    get_connection_airports,
+    get_connection_window,
+)
 
 class FakeFlightProvider:
     def __init__(self):
@@ -85,3 +90,20 @@ def test_get_connection_airports_deduplicates_destinations():
     airports = get_connection_airports(flights)
 
     assert airports == {"ATL", "DTW"}
+
+def test_get_connection_window_uses_connection_airport_local_time():
+    first_leg = FlightSegment(
+        flight_number="DL610",
+        operating_carrier="DL",
+        origin="JFK",
+        destination="ATL",
+        departure_time="2026-11-13T22:15:00+00:00",
+        arrival_time="2026-11-14T00:45:00+00:00",
+    )
+
+    depart_after, depart_before = get_connection_window(
+        first_leg
+    )
+
+    assert depart_after.isoformat() == "2026-11-13T20:30:00-05:00"
+    assert depart_before.isoformat() == "2026-11-13T23:45:00-05:00"
