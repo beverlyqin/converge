@@ -7,6 +7,8 @@ from backend.app.ranking.scoring import RankingWeights
 from backend.app.search import (
     search_meetup_itineraries,
     search_ranked_meetups,
+    RankingWeights,
+    rank_destinations,
 )
 
 class FakeFlightProvider:
@@ -100,7 +102,6 @@ def test_search_meetup_itineraries_matches_direct_and_one_stop():
         "DL300",
     ]
 
-
 def test_search_ranked_meetups_returns_ranked_destination():
     provider = FakeFlightProvider()
 
@@ -144,3 +145,76 @@ def test_search_ranked_meetups_returns_ranked_destination():
     assert scored_pair.itinerary_a.stops == 0
     assert scored_pair.itinerary_b.stops == 1
     assert backup_count == 0
+
+def test_reranking_does_not_make_additional_provider_calls():
+    class CountingFakeFlightProvider(FakeFlightProvider):
+        def __init__(self):
+            self.call_count = 0
+
+        def get_flights(
+            self,
+            origin,
+            depart_after,
+            depart_before,
+        ):
+            self.call_count += 1
+
+            return super().get_flights(
+                origin,
+                depart_after,
+                depart_before,
+            )
+
+    provider = CountingFakeFlightProvider()
+
+    traveler_a = TravelerRequest(
+        origin="JFK",
+        depart_after="2026-11-13T17:00:00-05:00",
+        depart_before="2026-11-13T23:59:00-05:00",
+    )
+
+    traveler_b = TravelerRequest(
+        origin="SEA",
+        depart_after="2026-11-13T14:00:00-08:00",
+        depart_before="2026-11-13T20:00:00-08:00",
+    )
+
+    constraints = SearchConstraints(
+        max_stops=1,
+        max_arrival_gap_minutes=60,
+    )
+
+    pairs = search_meetup_itineraries(
+        provider,
+        traveler_a,
+        traveler_b,
+        constraints,
+    )
+
+    calls_after_search = provider.call_count
+
+    weights_a = RankingWeights(
+        arrival_sync=1.0,
+        stops=0.0,
+        travel_time=0.0,
+        backup_options=0.0,
+    )
+
+    weights_b = RankingWeights(
+        arrival_sync=0.0,
+        stops=1.0,
+        travel_time=0.0,
+        backup_options=0.0,
+    )
+
+    rank_destinations(
+        pairs,
+        weights_a,
+    )
+
+    rank_destinations(
+        pairs,
+        weights_b,
+    )
+
+    assert provider.call_count == calls_after_search
