@@ -2,8 +2,10 @@ from backend.app.domain.models import (
     FlightSegment,
     TravelerRequest,
 )
-from backend.app.providers.schedules import collect_direct_schedules
-
+from backend.app.providers.schedules import (
+    collect_direct_schedules,
+    get_connection_airports,
+)
 
 class FakeFlightProvider:
     def __init__(self):
@@ -51,3 +53,35 @@ def test_collect_direct_schedules_deduplicates_queries():
 
     assert provider.call_count == 1
     assert len(flights) == 1
+
+def test_get_connection_airports_deduplicates_destinations():
+    flights = [
+        FlightSegment(
+            flight_number="DL100",
+            operating_carrier="DL",
+            origin="JFK",
+            destination="ATL",
+            departure_time="2026-11-13T17:00:00-05:00",
+            arrival_time="2026-11-13T19:30:00-05:00",
+        ),
+        FlightSegment(
+            flight_number="DL101",
+            operating_carrier="DL",
+            origin="JFK",
+            destination="ATL",
+            departure_time="2026-11-13T18:00:00-05:00",
+            arrival_time="2026-11-13T20:30:00-05:00",
+        ),
+        FlightSegment(
+            flight_number="DL200",
+            operating_carrier="DL",
+            origin="JFK",
+            destination="DTW",
+            departure_time="2026-11-13T17:30:00-05:00",
+            arrival_time="2026-11-13T19:45:00-05:00",
+        ),
+    ]
+
+    airports = get_connection_airports(flights)
+
+    assert airports == {"ATL", "DTW"}

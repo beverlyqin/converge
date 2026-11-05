@@ -35,3 +35,12 @@ def collect_direct_schedules(
         )
 
     return flights
+
+def get_connection_airports(
+    first_leg_flights: list[FlightSegment],
+) -> set[str]:
+    """Return unique airports that may be used for connections"""
+    return {
+        flight.destination
+        for flight in first_leg_flights
+    }
