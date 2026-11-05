@@ -1,0 +1,62 @@
+[
+    {
+      "id": "amex_platinum_lounge_terms",
+      "source_name": "American Express Platinum Card Lounge Terms",
+      "url": "https://www.americanexpress.com/en-us/travel/lounges/the-platinum-card/terms",
+      "provider": "American Express",
+      "document_type": "credit_card_lounge_policy",
+      "card": "Amex Platinum",
+      "airport": null,
+      "retrieved_at": "2026-11-05"
+    },
+    {
+      "id": "amex_centurion_access",
+      "source_name": "Centurion Lounge Access Policy",
+      "url": "https://thecenturionlounge-prod.americanexpress.com/info/access/",
+      "provider": "American Express",
+      "document_type": "lounge_access_policy",
+      "card": "Amex Platinum",
+      "airport": null,
+      "retrieved_at": "2026-11-05"
+    },
+    {
+      "id": "delta_reserve_centurion_access",
+      "source_name": "Delta Reserve Centurion Lounge Access",
+      "url": "https://global.americanexpress.com/card-benefits/detail/complimentary-access-centurion-lounge/delta-reserve",
+      "provider": "American Express",
+      "document_type": "credit_card_lounge_policy",
+      "card": "Delta Reserve",
+      "airport": null,
+      "retrieved_at": "2026-11-05"
+    },
+    {
+      "id": "delta_reserve_skyclub",
+      "source_name": "Delta Reserve Sky Club Access",
+      "url": "https://www.delta.com/sky-club/purchase-membership",
+      "provider": "Delta",
+      "document_type": "credit_card_lounge_policy",
+      "card": "Delta Reserve",
+      "airport": null,
+      "retrieved_at": "2026-11-05"
+    },
+    {
+      "id": "jfk_centurion",
+      "source_name": "JFK Centurion Lounge",
+      "url": "https://thecenturionlounge-prod.americanexpress.com/locations/jfk/",
+      "provider": "American Express",
+      "document_type": "lounge_location",
+      "card": null,
+      "airport": "JFK",
+      "retrieved_at": "2026-11-05"
+    },
+    {
+      "id": "mia_centurion",
+      "source_name": "MIA Centurion Lounge",
+      "url": "https://thecenturionlounge-prod.americanexpress.com/locations/mia/",
+      "provider": "American Express",
+      "document_type": "lounge_location",
+      "card": null,
+      "airport": "MIA",
+      "retrieved_at": "2026-11-05"
+    }
+  ]
