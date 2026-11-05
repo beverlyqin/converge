@@ -4,7 +4,7 @@ from backend.app.domain.models import (
 )
 from backend.app.providers.oag import OAGFlightProvider
 from backend.app.ranking.scoring import RankingWeights, rank_meeting_destinations
-
+from backend.app.providers.schedules import collect_direct_schedules
 
 def main():
     provider = OAGFlightProvider()
@@ -20,20 +20,10 @@ def main():
         depart_after="2026-11-13T16:00:00-08:00",
         depart_before="2026-11-13T23:59:00-08:00",
     )
-
-    flights_a = provider.get_flights(
-        origin=traveler_a.origin,
-        depart_after=traveler_a.depart_after,
-        depart_before=traveler_a.depart_before,
+    flights = collect_direct_schedules(
+        provider,
+        [traveler_a, traveler_b],
     )
-
-    flights_b = provider.get_flights(
-        origin=traveler_b.origin,
-        depart_after=traveler_b.depart_after,
-        depart_before=traveler_b.depart_before,
-    )
-
-    flights = flights_a + flights_b
 
     constraints = SearchConstraints(
         max_stops=0,
@@ -55,9 +45,9 @@ def main():
         constraints,
         weights,
     )
-
-    print(f"JFK flights: {len(flights_a)}")
-    print(f"SEA flights: {len(flights_b)}")
+    print(f"Flights collected: {len(flights)}")
+    print(f"OAG HTTP requests: {provider.request_count}")
+    print(f"Common destinations: {len(ranked)}")
     print(f"Common destinations: {len(ranked)}")
     print()
 
