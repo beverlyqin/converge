@@ -20,14 +20,14 @@
       "retrieved_at": "2026-11-05"
     },
     {
-      "id": "delta_reserve_centurion_access",
-      "source_name": "Delta Reserve Centurion Lounge Access",
-      "url": "https://global.americanexpress.com/card-benefits/detail/complimentary-access-centurion-lounge/delta-reserve",
-      "provider": "American Express",
-      "document_type": "credit_card_lounge_policy",
-      "card": "Delta Reserve",
-      "airport": null,
-      "retrieved_at": "2026-11-05"
+        "id": "delta_reserve_centurion_access",
+        "source_name": "Delta Reserve Centurion Lounge Access Terms",
+        "url": "https://thecenturionlounge-prod.americanexpress.com/info/terms/",
+        "provider": "American Express",
+        "document_type": "credit_card_lounge_policy",
+        "card": "Delta Reserve",
+        "airport": null,
+        "retrieved_at": "2026-11-06"
     },
     {
       "id": "delta_reserve_skyclub",

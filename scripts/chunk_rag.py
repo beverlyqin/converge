@@ -2,52 +2,21 @@ import json
 import nltk
 import re
 from pathlib import Path
-from collections import Counter
 
 from transformers import AutoTokenizer
-from langchain_text_splitters import (
-    MarkdownHeaderTextSplitter
-)
+from langchain_text_splitters import MarkdownHeaderTextSplitter
 from nltk.tokenize import sent_tokenize
 from langchain_core.documents import Document
 
 
-nltk.download("punkt_tab")
+nltk.download("punkt_tab", quiet=True)
 
 project_root = Path(__file__).resolve().parents[1]
 
-cleaned_path=(
-    project_root
-    / "data"
-    / "rag"
-    / "cleaned"
-    / "amex_platinum_lounge_terms.md"
-)
+cleaned_dir = project_root / "data" / "rag" / "cleaned"
+sources_path = project_root / "data" / "rag" / "sources.json"
+chunks_path = project_root / "data" / "rag" / "chunks.json"
 
-srouces_path = project_root / "data" / "rag" / "sources.json"
-
-markdown = cleaned_path.read_text(encoding="utf-8")
-
-with srouces_path.open() as file:
-    sources = json.load(file)
-
-source = next(
-    source
-    for source in sources
-    if source["id"] == "amex_platinum_lounge_terms"
-)
-
-header_splitter = MarkdownHeaderTextSplitter(
-    headers_to_split_on=[
-        ("##", "section"),
-    ]
-)
-
-section_documents = header_splitter.split_text(markdown)
-
-tokenizer = AutoTokenizer.from_pretrained(
-    "sentence-transformers/all-MiniLM-L6-v2"
-)
 
 def chunk_by_sentence(text, tokenizer, max_tokens=200):
     sentences = sent_tokenize(text)
@@ -70,7 +39,9 @@ def chunk_by_sentence(text, tokenizer, max_tokens=200):
         ):
             chunks.append(" ".join(current_sentences))
 
+            # One full sentence of overlap
             current_sentences = [current_sentences[-1]]
+
             current_tokens = len(
                 tokenizer.encode(
                     current_sentences[0],
@@ -86,93 +57,81 @@ def chunk_by_sentence(text, tokenizer, max_tokens=200):
 
     return chunks
 
-chunks = []
 
-for section_document in section_documents:
-    section_chunks = chunk_by_sentence(
-        section_document.page_content,
-        tokenizer,
-        max_tokens=200,
-    )
-
-    section = section_document.metadata["section"]
-
-    section_slug = re.sub(
-        r"[^a-z0-9]+",
-        "_",
-        section.lower(),
-    ).strip("_")
-
-    for chunk_number, text in enumerate(section_chunks, start=1):
-        metadata = section_document.metadata.copy()
-
-        metadata["chunk_id"] = (
-            f'{source["id"]}::'
-            f"{section_slug}::"
-            f"{chunk_number}"
-        )
-
-        chunks.append(
-            Document(
-                page_content=text,
-                metadata=metadata,
-            )
-        )
-
-for i, chunk in enumerate(chunks):
-    chunk.metadata.update(
-        {
-            "source_id": source["id"],
-            "source_name": source["source_name"],
-            "url": source["url"],
-            "provider": source["provider"],
-            "document_type": source["document_type"],
-            "card": source["card"],
-        }
-    )
-    section = chunk.metadata.get("section")
-
-    if section:
-        chunk.page_content = (
-            f"{section}\n\n{chunk.page_content}"
-        )
-
-    print(f"\n--- Chunk {i} ---")
-    print(chunk.metadata)
-    print(chunk.page_content)
-
-# inspect chunks
-section_counts = Counter(
-    chunk.metadata.get("section")
-    for chunk in chunks
+sources = json.loads(
+    sources_path.read_text(encoding="utf-8")
 )
 
-print(f"Total chunks: {len(chunks)}")
+header_splitter = MarkdownHeaderTextSplitter(
+    headers_to_split_on=[
+        ("##", "section"),
+    ]
+)
 
-for section, count in section_counts.items():
-    print(f"{section}: {count} chunks")
+tokenizer = AutoTokenizer.from_pretrained(
+    "sentence-transformers/all-MiniLM-L6-v2"
+)
+
+chunks = []
 
 
-seen_sections = set()
+for source in sources:
+    cleaned_path = cleaned_dir / f'{source["id"]}.md'
 
-for chunk in chunks:
+    if not cleaned_path.exists():
+        continue
 
-        print(f"\n--- {section} ---")
-        print(chunk.page_content)
-
-for i, chunk in enumerate(chunks):
-    token_count = len(
-        tokenizer.encode(
-            chunk.page_content,
-            add_special_tokens=False,
-        )
+    markdown = cleaned_path.read_text(
+        encoding="utf-8"
     )
 
-    print(f"\n--- Chunk {i} ({token_count} tokens) ---")
-    print(chunk.metadata)
-    print(chunk.page_content)
+    section_documents = header_splitter.split_text(
+        markdown
+    )
 
-chunks_path = project_root / "data" / "rag" / "chunks.json"
+    for section_document in section_documents:
+        section_chunks = chunk_by_sentence(
+            section_document.page_content,
+            tokenizer,
+            max_tokens=200,
+        )
+
+        section = section_document.metadata["section"]
+
+        section_slug = re.sub(
+            r"[^a-z0-9]+",
+            "_",
+            section.lower(),
+        ).strip("_")
+
+        for chunk_number, text in enumerate(
+            section_chunks,
+            start=1,
+        ):
+            metadata = {
+                **section_document.metadata,
+                "chunk_id": (
+                    f'{source["id"]}::'
+                    f"{section_slug}::"
+                    f"{chunk_number}"
+                ),
+                "source_id": source["id"],
+                "source_name": source["source_name"],
+                "url": source["url"],
+                "provider": source["provider"],
+                "document_type": source["document_type"],
+                "card": source.get("card"),
+                "airport": source.get("airport"),
+                "retrieved_at": source.get("retrieved_at"),
+            }
+
+            chunks.append(
+                Document(
+                    page_content=text,
+                    metadata=metadata,
+                )
+            )
+
 
 chunk_data = [
     {
@@ -187,14 +146,21 @@ chunks_path.write_text(
     encoding="utf-8",
 )
 
+
 print(f"Saved {len(chunks)} chunks to: {chunks_path}")
 
-for chunk in chunks:
-    section = chunk.metadata.get("section")
+for source in sources:
+    count = sum(
+        1
+        for chunk in chunks
+        if chunk.metadata["source_id"] == source["id"]
+    )
 
-    if section in {
-        "The Centurion Lounge",
-        "Delta Sky Club",
-    }:
+    if count:
+        print(f"{source['id']}: {count} chunks")
+
+# temp
+for chunk in chunks:
+    if chunk.metadata["source_id"] == "delta_reserve_centurion_access":
         print("\n" + chunk.metadata["chunk_id"])
         print(chunk.page_content)
