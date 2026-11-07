@@ -50,13 +50,13 @@
       "retrieved_at": "2026-11-05"
     },
     {
-      "id": "mia_centurion",
-      "source_name": "MIA Centurion Lounge",
-      "url": "https://thecenturionlounge-prod.americanexpress.com/locations/mia/",
-      "provider": "American Express",
-      "document_type": "lounge_location",
-      "card": null,
-      "airport": "MIA",
-      "retrieved_at": "2026-11-05"
+        "id": "mia_centurion",
+        "source_name": "MIA Centurion Lounge",
+        "url": "https://www.thecenturionlounge.com/site/mia/",
+        "provider": "American Express",
+        "document_type": "lounge_location",
+        "card": null,
+        "airport": "MIA",
+        "retrieved_at": "2026-11-07"
     }
   ]

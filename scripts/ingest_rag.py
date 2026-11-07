@@ -15,7 +15,7 @@ raw_dir.mkdir(parents=True, exist_ok=True)
 with sources_path.open() as file:
     sources = json.load(file)
 
-source_id = "jfk_centurion"
+source_id = "mia_centurion"
 
 source = next(
     source
@@ -37,11 +37,14 @@ response.raise_for_status()
 soup = BeautifulSoup(response.text, "html.parser")
 
 text_node = soup.find(
-    string=lambda text: text and "Terminal 4" in text
+    string=lambda text: (
+        text
+        and "The Lounge is" in text
+    )
 )
 
 if text_node is None:
-    raise ValueError("JFK location section not found")
+    raise ValueError("Lounge location section not found")
 
 container = text_node.parent.parent
 
@@ -56,7 +59,7 @@ location_text = "\n".join(
 )
 
 cleaned_text = (
-    "## JFK Centurion Lounge\n\n"
+    "## MIA Centurion Lounge\n\n"
     f"{location_text}"
 )
 

@@ -73,5 +73,39 @@
       "required_chunk_ids": [
         "amex_platinum_lounge_terms::the_centurion_lounge::5"
       ]
+    },
+    {
+      "question": "Where is the Centurion Lounge at MIA?",
+      "card": null,
+      "airport": "MIA",
+      "required_chunk_ids": [
+        "mia_centurion::mia_centurion_lounge::1"
+      ]
+    },
+    {
+      "question": "What time does the MIA Centurion Lounge close?",
+      "card": null,
+      "airport": "MIA",
+      "required_chunk_ids": [
+        "mia_centurion::mia_centurion_lounge::1"
+      ]
+    },
+    {
+      "question": "I have an Amex Platinum and I am flying from MIA. What Centurion Lounge can I use and where is it?",
+      "card": "Amex Platinum",
+      "airport": "MIA",
+      "required_chunk_ids": [
+        "amex_platinum_lounge_terms::the_centurion_lounge::1",
+        "mia_centurion::mia_centurion_lounge::1"
+      ]
+    },
+    {
+      "question": "I have a Delta Reserve and I am flying from MIA. Can I use the Centurion Lounge?",
+      "card": "Delta Reserve",
+      "airport": "MIA",
+      "required_chunk_ids": [
+        "delta_reserve_centurion_access::delta_skymiles_reserve_card_members::1",
+        "mia_centurion::mia_centurion_lounge::1"
+      ]
     }
 ]

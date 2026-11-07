@@ -628,5 +628,20 @@
       "airport": "JFK",
       "retrieved_at": "2026-11-05"
     }
+  },
+  {
+    "content": "The Lounge is located in Concourse D, near Gate D12, on the 4th floor. It is accessible via the SkyTrain within the D Concourse. If you are coming from another terminal, you must re-enter through security with either a connecting or onward boarding pass. Hours: 5 am - 10 pm.",
+    "metadata": {
+      "section": "MIA Centurion Lounge",
+      "chunk_id": "mia_centurion::mia_centurion_lounge::1",
+      "source_id": "mia_centurion",
+      "source_name": "MIA Centurion Lounge",
+      "url": "https://www.thecenturionlounge.com/site/mia/",
+      "provider": "American Express",
+      "document_type": "lounge_location",
+      "card": null,
+      "airport": "MIA",
+      "retrieved_at": "2026-11-07"
+    }
   }
 ]
