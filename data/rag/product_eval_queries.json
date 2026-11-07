@@ -1,0 +1,77 @@
+[
+    {
+      "question": "I have an Amex Platinum and I am flying from JFK. What Centurion Lounge can I use and where is it?",
+      "card": "Amex Platinum",
+      "airport": "JFK",
+      "required_chunk_ids": [
+        "amex_platinum_lounge_terms::the_centurion_lounge::1",
+        "jfk_centurion::jfk_centurion_lounge::1"
+      ]
+    },
+    {
+      "question": "I have a Delta Reserve and I am flying from JFK. Can I use the Centurion Lounge?",
+      "card": "Delta Reserve",
+      "airport": "JFK",
+      "required_chunk_ids": [
+        "delta_reserve_centurion_access::delta_skymiles_reserve_card_members::1",
+        "jfk_centurion::jfk_centurion_lounge::1"
+      ]
+    },
+    {
+      "question": "Where is the Centurion Lounge at JFK?",
+      "card": null,
+      "airport": "JFK",
+      "required_chunk_ids": [
+        "jfk_centurion::jfk_centurion_lounge::1"
+      ]
+    },
+    {
+      "question": "What time does the JFK Centurion Lounge close?",
+      "card": null,
+      "airport": "JFK",
+      "required_chunk_ids": [
+        "jfk_centurion::jfk_centurion_lounge::1"
+      ]
+    },
+    {
+      "question": "How much does a guest cost at the Centurion Lounge with my Delta Reserve?",
+      "card": "Delta Reserve",
+      "airport": null,
+      "required_chunk_ids": [
+        "delta_reserve_centurion_access::delta_skymiles_reserve_card_members::1"
+      ]
+    },
+    {
+      "question": "How early can I enter the Centurion Lounge with my Delta Reserve?",
+      "card": "Delta Reserve",
+      "airport": null,
+      "required_chunk_ids": [
+        "delta_reserve_centurion_access::delta_skymiles_reserve_card_members::2"
+      ]
+    },
+    {
+      "question": "What ID and documents might I need at the Centurion Lounge with my Delta Reserve?",
+      "card": "Delta Reserve",
+      "airport": null,
+      "required_chunk_ids": [
+        "delta_reserve_centurion_access::delta_skymiles_reserve_card_members::2",
+        "delta_reserve_centurion_access::delta_skymiles_reserve_card_members::3"
+      ]
+    },
+    {
+      "question": "How much do Centurion Lounge guests cost with my Amex Platinum?",
+      "card": "Amex Platinum",
+      "airport": null,
+      "required_chunk_ids": [
+        "amex_platinum_lounge_terms::the_centurion_lounge::4"
+      ]
+    },
+    {
+      "question": "How much do I need to spend for complimentary Centurion Lounge guest access?",
+      "card": "Amex Platinum",
+      "airport": null,
+      "required_chunk_ids": [
+        "amex_platinum_lounge_terms::the_centurion_lounge::5"
+      ]
+    }
+]

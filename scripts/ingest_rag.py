@@ -15,7 +15,7 @@ raw_dir.mkdir(parents=True, exist_ok=True)
 with sources_path.open() as file:
     sources = json.load(file)
 
-source_id = "delta_reserve_centurion_access"
+source_id = "jfk_centurion"
 
 source = next(
     source
@@ -37,50 +37,33 @@ response.raise_for_status()
 soup = BeautifulSoup(response.text, "html.parser")
 
 text_node = soup.find(
-    string=lambda text: (
-        text
-        and "Delta SkyMiles" in text
-        and "Reserve Card Members" in text
-    )
+    string=lambda text: text and "Terminal 4" in text
 )
 
-heading = soup.find(
-    string=lambda text: (
-        text
-        and "Delta SkyMiles" in text
-        and "Reserve Card Members" in text
-    )
+if text_node is None:
+    raise ValueError("JFK location section not found")
+
+container = text_node.parent.parent
+
+paragraphs = container.find_all(
+    "p",
+    recursive=False,
 )
 
-if heading is None:
-    raise ValueError("Delta Reserve section not found")
+location_text = "\n".join(
+    paragraph.get_text(" ", strip=True)
+    for paragraph in paragraphs[:2]
+)
 
-heading_element = heading.parent.parent
-
-section_parts = [
-    "## Delta SkyMiles Reserve Card Members"
-]
-
-for sibling in heading_element.find_next_siblings():
-    text = sibling.get_text(
-        " ",
-        strip=True,
-    )
-
-    if text.startswith("Sidecar by The Centurion"):
-        break
-
-    section_parts.append(text)
-
-cleaned_text = "\n\n".join(section_parts)
+cleaned_text = (
+    "## JFK Centurion Lounge\n\n"
+    f"{location_text}"
+)
 
 cleaned_dir = project_root / "data" / "rag" / "cleaned"
 cleaned_dir.mkdir(parents=True, exist_ok=True)
 
-cleaned_path = (
-    cleaned_dir
-    / f'{source["id"]}.md'
-)
+cleaned_path = cleaned_dir / f'{source["id"]}.md'
 
 cleaned_path.write_text(
     cleaned_text,
@@ -90,15 +73,8 @@ cleaned_path.write_text(
 print(f"Cleaned characters: {len(cleaned_text):,}")
 print(f"Cleaned text saved to: {cleaned_path}")
 
-output_path = raw_dir / f'{source["id"]}.html'
-
-output_path.write_text(
-    response.text,
-    encoding="utf-8",
-)
 
 print(f"Downloaded: {source['source_name']}")
 print(f"Status: {response.status_code}")
-print(f"Saved to: {output_path}")
 print(f"Characters: {len(response.text):,}")
 

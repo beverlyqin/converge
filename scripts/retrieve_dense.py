@@ -30,8 +30,8 @@ vector_store = InMemoryVectorStore(embeddings)
 vector_store.add_documents(documents)
 
 question=(
-    "How many Delta Sky Club visits do I get "
-    "with an Amex Platinum?"
+    "I have an Amex Platinum and I am flying from JFK. "
+    "What Centurion Lounge can I use and where is it?"
 )
 
 results = vector_store.similarity_search_with_score(
