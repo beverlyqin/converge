@@ -47,6 +47,7 @@
       "document_type": "lounge_location",
       "card": null,
       "airport": "JFK",
+      "lounge_network": "Centurion Lounge",
       "retrieved_at": "2026-11-05"
     },
     {
@@ -57,6 +58,29 @@
         "document_type": "lounge_location",
         "card": null,
         "airport": "MIA",
+        "lounge_network": "Centurion Lounge",
+        "retrieved_at": "2026-11-07"
+    },
+    {
+        "id": "jfk_delta_sky_club_a",
+        "source_name": "JFK Delta Sky Club - Concourse A",
+        "url": "https://www.americanexpress.com/en-us/travel/lounges/the-platinum-card/JFK/Delta-Sky-Club-Concourse-A-Terminal-4-rJA1sHidHA/",
+        "provider": "American Express",
+        "document_type": "lounge_location",
+        "card": null,
+        "airport": "JFK",
+        "lounge_network": "Delta Sky Club",
+        "retrieved_at": "2026-11-07"
+    },
+    {
+        "id": "jfk_delta_sky_club_b",
+        "source_name": "JFK Delta Sky Club - Concourse B",
+        "url": "https://www.americanexpress.com/en-us/travel/lounges/the-platinum-card/JFK/Delta-Sky-Club-Concourse-B-Terminal-4-KHGcb4O8GD/",
+        "provider": "American Express",
+        "document_type": "lounge_location",
+        "card": null,
+        "airport": "JFK",
+        "lounge_network": "Delta Sky Club",
         "retrieved_at": "2026-11-07"
     }
-  ]
+]

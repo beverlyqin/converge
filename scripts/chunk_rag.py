@@ -122,9 +122,10 @@ for source in sources:
                 "document_type": source["document_type"],
                 "card": source.get("card"),
                 "airport": source.get("airport"),
+                "lounge_network": source.get("lounge_network"),
                 "retrieved_at": source.get("retrieved_at"),
             }
-
+                
             chunks.append(
                 Document(
                     page_content=text,

@@ -107,5 +107,24 @@
         "delta_reserve_centurion_access::delta_skymiles_reserve_card_members::1",
         "mia_centurion::mia_centurion_lounge::1"
       ]
+    },
+    {
+      "question": "Where are the Delta Sky Clubs at JFK?",
+      "card": null,
+      "airport": "JFK",
+      "lounge_network": "Delta Sky Club",
+      "required_chunk_ids": [
+        "jfk_delta_sky_club_a::jfk_delta_sky_club_concourse_a::1",
+        "jfk_delta_sky_club_b::jfk_delta_sky_club_concourse_b::1"
+      ]
+    },
+    {
+      "question": "Where is the Centurion Lounge at JFK?",
+      "card": null,
+      "airport": "JFK",
+      "lounge_network": "Centurion Lounge",
+      "required_chunk_ids": [
+        "jfk_centurion::jfk_centurion_lounge::1"
+      ]
     }
 ]

@@ -39,6 +39,7 @@ embeddings = HuggingFaceEmbeddings(
 def retrieve_for_query(query, k):
     card = query.get("card")
     airport = query.get("airport")
+    lounge_network = query.get("lounge_network")
 
     retrieved = []
 
@@ -64,9 +65,15 @@ def retrieve_for_query(query, k):
         airport_documents = [
             document
             for document in documents
-            if document.metadata.get("airport") == airport
+            if (
+                document.metadata.get("airport") == airport
+                and (
+                    lounge_network is None
+                    or document.metadata.get("lounge_network")
+                    == lounge_network
+                )
+            )
         ]
-
         if airport_documents:
             airport_store = InMemoryVectorStore(embeddings)
             airport_store.add_documents(airport_documents)
