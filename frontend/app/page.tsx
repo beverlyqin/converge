@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 type FlightSegment = {
   flight_number: string;
@@ -13,6 +13,24 @@ type FlightSegment = {
 
 type Itinerary = {
   segments: FlightSegment[];
+};
+
+type LoungeLocation = {
+  name: string;
+  network: string;
+  airport: string;
+  location: string;
+};
+
+type LoungePolicyEvidence = {
+  chunk_id: string;
+  content: string;
+};
+
+type LoungeSearchResult = {
+  matched_lounge_networks: string[];
+  lounges: LoungeLocation[];
+  policies: Record<string, LoungePolicyEvidence[]>;
 };
 
 type MeetupSearchResult = {
@@ -145,6 +163,78 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
+  const [loungeCards, setLoungeCards] = useState<string[]>([]);
+  const [selectedLoungeCard, setSelectedLoungeCard] = useState("");
+  const [loungeResults, setLoungeResults] = useState<Record<string, LoungeSearchResult>>({});
+  const [loungeLoadingDestination, setLoungeLoadingDestination] = useState<string | null>(null);
+  const [loungeErrors, setLoungeErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    async function loadLoungeCards() {
+      try {
+        const response = await fetch("/api/lounges/cards");
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data: { cards: string[] } = await response.json();
+        setLoungeCards(data.cards);
+
+        if (data.cards.length > 0) {
+          setSelectedLoungeCard(data.cards[0]);
+        }
+      } catch {
+        // Lounge lookup is optional, so flight search remains usable.
+      }
+    }
+
+    loadLoungeCards();
+  }, []);
+
+  async function handleLoungeSearch(destination: string) {
+    if (!selectedLoungeCard) {
+      return;
+    }
+
+    setLoungeLoadingDestination(destination);
+    setLoungeErrors((current) => ({
+      ...current,
+      [destination]: "",
+    }));
+
+    try {
+      const response = await fetch("/api/lounges/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          card: selectedLoungeCard,
+          airport: destination,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Could not load lounge access.");
+      }
+
+      const data: LoungeSearchResult = await response.json();
+
+      setLoungeResults((current) => ({
+        ...current,
+        [destination]: data,
+      }));
+    } catch (err) {
+      setLoungeErrors((current) => ({
+        ...current,
+        [destination]:
+          err instanceof Error ? err.message : "Could not load lounge access.",
+      }));
+    } finally {
+      setLoungeLoadingDestination(null);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -648,7 +738,7 @@ export default function Home() {
 
             {results.length > 0 && (
               <div>
-                <div className="mb-5 flex items-end justify-between">
+                <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="text-sm text-slate-500">
                       Ranked meetup options
@@ -658,10 +748,33 @@ export default function Home() {
                     </h2>
                   </div>
 
-                  <p className="text-sm text-slate-400">
-                    {results.length} result
-                    {results.length !== 1 && "s"}
-                  </p>
+                  <div className="flex items-end gap-3">
+                    {loungeCards.length > 0 && (
+                      <label className="text-xs font-medium text-slate-500">
+                        Lounge card
+                        <select
+                          value={selectedLoungeCard}
+                          onChange={(e) => {
+                            setSelectedLoungeCard(e.target.value);
+                            setLoungeResults({});
+                            setLoungeErrors({});
+                          }}
+                          className="mt-1 block rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                        >
+                          {loungeCards.map((card) => (
+                            <option key={card} value={card}>
+                              {card}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+
+                    <p className="pb-2 text-sm text-slate-400">
+                      {results.length} result
+                      {results.length !== 1 && "s"}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="space-y-5">
@@ -789,6 +902,82 @@ export default function Home() {
                             )
                           )}
                         </ul>
+                      </div>
+                      <div className="mt-5 border-t border-slate-100 pt-5">
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <p className="text-sm font-semibold">
+                              Lounge access
+                            </p>
+                            <p className="mt-1 text-xs text-slate-400">
+                              Check lounges at {result.destination} for your selected card.
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            disabled={
+                              !selectedLoungeCard ||
+                              loungeLoadingDestination === result.destination
+                            }
+                            onClick={() => handleLoungeSearch(result.destination)}
+                            className="shrink-0 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {loungeLoadingDestination === result.destination
+                              ? "Checking..."
+                              : "Check lounges"}
+                          </button>
+                        </div>
+
+                        {loungeErrors[result.destination] && (
+                          <p className="mt-3 text-sm text-red-600">
+                            {loungeErrors[result.destination]}
+                          </p>
+                        )}
+
+                        {loungeResults[result.destination] && (
+                          <div className="mt-4 space-y-3">
+                            {loungeResults[result.destination].lounges.length === 0 ? (
+                              <p className="text-sm text-slate-500">
+                                No matching lounges found for {selectedLoungeCard}.
+                              </p>
+                            ) : (
+                              loungeResults[result.destination].lounges.map((lounge) => (
+                                <div
+                                  key={`${lounge.name}-${lounge.network}`}
+                                  className="rounded-2xl bg-slate-50 p-4"
+                                >
+                                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                                    <p className="font-medium">{lounge.name}</p>
+                                    <span className="text-xs text-slate-400">
+                                      {lounge.network}
+                                    </span>
+                                  </div>
+
+                                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                                    {lounge.location}
+                                  </p>
+
+                                  {loungeResults[result.destination].policies[lounge.network]?.length > 0 && (
+                                    <details className="mt-3">
+                                      <summary className="cursor-pointer text-sm font-medium text-slate-600">
+                                        Access details
+                                      </summary>
+
+                                      <div className="mt-2 space-y-2 text-sm leading-6 text-slate-500">
+                                        {loungeResults[result.destination].policies[lounge.network].map((evidence) => (
+                                          <p key={evidence.chunk_id}>
+                                            {evidence.content}
+                                          </p>
+                                        ))}
+                                      </div>
+                                    </details>
+                                  )}
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        )}
                       </div>
                     </article>
                   ))}

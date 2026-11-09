@@ -47,6 +47,29 @@ class MeetupSearchResult(BaseModel):
     component_scores: ComponentScores
     explanation: DestinationExplanation
 
+class LoungeSearchRequest(BaseModel):
+    card: str
+    airport: str
+
+
+class LoungeLocation(BaseModel):
+    name: str
+    network: str
+    airport: str
+    location: str
+
+
+class LoungePolicyEvidence(BaseModel):
+    chunk_id: str
+    content: str
+
+
+class LoungeSearchResult(BaseModel):
+    matched_lounge_networks: list[str]
+    lounges: list[LoungeLocation]
+    policies: dict[str, list[LoungePolicyEvidence]]
+
+
 class AgentMeetupRequest(BaseModel):
     question: str
 
@@ -57,6 +80,28 @@ def run_agent(question: str) -> str:
     from backend.app.agent.meetup_agent import run_meetup_agent
 
     return run_meetup_agent(question)
+
+
+def get_supported_lounge_cards() -> list[str]:
+    """Lazy import keeps API startup independent from embedding dependencies."""
+
+    from backend.app.tools.lounge_tools import list_supported_cards
+
+    return list_supported_cards()
+
+
+def get_lounge_access(
+    card: str,
+    airport: str,
+) -> dict:
+    """Retrieve grounded lounge locations and access-policy evidence."""
+
+    from backend.app.tools.lounge_tools import search_lounge_access
+
+    return search_lounge_access(
+        card=card,
+        airport=airport,
+    )
 
 def get_flight_provider():
     if os.getenv("FLIGHT_PROVIDER") == "mock":
@@ -165,6 +210,23 @@ def search_meetups(request: MeetupSearchRequest) -> list[MeetupSearchResult]:
             total_score,
         ) in ranked
     ]
+
+
+@app.get("/lounges/cards")
+def lounge_cards():
+    return {
+        "cards": get_supported_lounge_cards(),
+    }
+
+
+@app.post("/lounges/search", response_model=LoungeSearchResult)
+def search_lounges(request: LoungeSearchRequest) -> LoungeSearchResult:
+    result = get_lounge_access(
+        card=request.card,
+        airport=request.airport.upper(),
+    )
+
+    return LoungeSearchResult(**result)
 
 
 @app.post("/agent/meetup")

@@ -15,6 +15,45 @@ project_root = Path(__file__).resolve().parents[3]
 chunks_path = project_root / "data" / "rag" / "chunks.json"
 
 
+def list_supported_cards() -> list[str]:
+    """Return credit cards represented in the lounge-policy chunks."""
+
+    chunks = load_chunks(chunks_path)
+
+    return sorted({
+        card
+        for chunk in chunks
+        if (card := chunk["metadata"].get("card"))
+    })
+
+
+def search_lounge_access(
+    card: str,
+    airport: str,
+) -> dict:
+    """Return lounge candidates plus grounded policy evidence."""
+
+    lounge_result = find_lounges.invoke({
+        "card": card,
+        "airport": airport,
+    })
+
+    policies = {}
+
+    for lounge_network in lounge_result["matched_lounge_networks"]:
+        policy_result = get_lounge_policy.invoke({
+            "card": card,
+            "lounge_network": lounge_network,
+        })
+
+        policies[lounge_network] = policy_result["evidence"]
+
+    return {
+        **lounge_result,
+        "policies": policies,
+    }
+
+
 @lru_cache(maxsize=1)
 def get_embeddings() -> HuggingFaceEmbeddings:
     """Load the embedding model only when policy retrieval actually needs it."""
