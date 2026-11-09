@@ -290,13 +290,27 @@ Start FastAPI:
 uvicorn backend.app.api:app --reload
 ```
 
-The live endpoint is:
+The live deterministic endpoint is:
 
 ```text
 POST /meetups/search
 ```
 
-Because OAG usage is quota-limited, normal development and tests should use mock/fake providers.
+The agent endpoint is:
+
+```text
+POST /agent/meetup
+```
+
+with a JSON body such as:
+
+```json
+{
+  "question": "Find a meetup destination for JFK and SEA and tell me about JFK lounges."
+}
+```
+
+The agent endpoint uses the reusable Gemini tool-calling loop. Because OAG usage is quota-limited, normal development and tests should use mock/fake providers.
 
 ### 5. Inspect the MCP server
 
