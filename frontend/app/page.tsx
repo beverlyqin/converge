@@ -134,6 +134,7 @@ export default function Home() {
   const [results, setResults] = useState<MeetupSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -154,6 +155,8 @@ export default function Home() {
       setLoading(false);
       return;
     }
+
+    setHasSearched(true);
 
     try {
       const response = await fetch("/api/meetups", {
@@ -540,7 +543,7 @@ export default function Home() {
               </div>
             )}
 
-            {!loading && !error && results.length === 0 && (
+            {!loading && !error && !hasSearched && (
               <div className="flex min-h-[430px] items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white/50 p-10 text-center">
                 <div>
                   <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm">
@@ -554,6 +557,21 @@ export default function Home() {
                   <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">
                     We&apos;ll compare reachable destinations and rank them by
                     group convenience.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!loading && !error && hasSearched && results.length === 0 && (
+              <div className="flex min-h-[430px] items-center justify-center rounded-3xl border border-slate-200 bg-white p-10 text-center">
+                <div>
+                  <h2 className="text-lg font-semibold">
+                    No meetup options found
+                  </h2>
+
+                  <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">
+                    Try widening the departure window, allowing more stops, or
+                    increasing the maximum arrival gap.
                   </p>
                 </div>
               </div>
