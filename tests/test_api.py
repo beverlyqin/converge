@@ -81,6 +81,8 @@ def test_search_meetups_endpoint(monkeypatch):
     assert len(data[0]["itinerary_b"]["segments"]) == 1 
     assert "metrics" in data[0]
     assert "component_scores" in data[0]
+    assert "explanation" in data[0]
+    assert data[0]["explanation"]["reasons"][0] == "Both travelers fly nonstop."
 
 
 def test_agent_meetup_endpoint(monkeypatch):
