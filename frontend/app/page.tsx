@@ -112,6 +112,10 @@ export default function Home() {
 
   const [maxStops, setMaxStops] = useState(1);
   const [maxArrivalGap, setMaxArrivalGap] = useState(120);
+  const [arrivalWeight, setArrivalWeight] = useState(4);
+  const [stopsWeight, setStopsWeight] = useState(2);
+  const [travelTimeWeight, setTravelTimeWeight] = useState(3);
+  const [backupWeight, setBackupWeight] = useState(1);
 
   const [results, setResults] = useState<MeetupSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -120,9 +124,22 @@ export default function Home() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    
     setLoading(true);
     setError("");
     setResults([]);
+
+    const totalWeight =
+    arrivalWeight +
+    stopsWeight +
+    travelTimeWeight +
+    backupWeight;
+
+    if (totalWeight === 0) {
+      setError("Choose at least one ranking preference.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/meetups", {
@@ -146,10 +163,10 @@ export default function Home() {
             max_arrival_gap_minutes: maxArrivalGap,
           },
           weights: {
-            arrival_sync: 0.4,
-            stops: 0.2,
-            travel_time: 0.3,
-            backup_options: 0.1,
+            arrival_sync: arrivalWeight / totalWeight,
+            stops: stopsWeight / totalWeight,
+            travel_time: travelTimeWeight / totalWeight,
+            backup_options: backupWeight / totalWeight,
           },
         }),
       });
@@ -303,6 +320,90 @@ export default function Home() {
                     <span className="text-slate-500">
                       {maxArrivalGap} min
                     </span>
+                  </div>
+                  <div className="border-t border-slate-100 pt-5">
+                    <p className="mb-1 text-sm font-semibold">
+                      Ranking preferences
+                    </p>
+
+                    <p className="mb-5 text-xs leading-5 text-slate-400">
+                      Higher values make that factor more important when ranking
+                      feasible destinations.
+                    </p>
+
+                    <div className="space-y-4">
+                      <div>
+                        <div className="mb-2 flex justify-between text-sm">
+                          <label>Arrive together</label>
+                          <span>{arrivalWeight}</span>
+                        </div>
+
+                        <input
+                          type="range"
+                          min="0"
+                          max="10"
+                          value={arrivalWeight}
+                          onChange={(e) =>
+                            setArrivalWeight(Number(e.target.value))
+                          }
+                          className="w-full"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="mb-2 flex justify-between text-sm">
+                          <label>Fewer stops</label>
+                          <span>{stopsWeight}</span>
+                        </div>
+
+                        <input
+                          type="range"
+                          min="0"
+                          max="10"
+                          value={stopsWeight}
+                          onChange={(e) =>
+                            setStopsWeight(Number(e.target.value))
+                          }
+                          className="w-full"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="mb-2 flex justify-between text-sm">
+                          <label>Shorter travel time</label>
+                          <span>{travelTimeWeight}</span>
+                        </div>
+
+                        <input
+                          type="range"
+                          min="0"
+                          max="10"
+                          value={travelTimeWeight}
+                          onChange={(e) =>
+                            setTravelTimeWeight(Number(e.target.value))
+                          }
+                          className="w-full"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="mb-2 flex justify-between text-sm">
+                          <label>Backup options</label>
+                          <span>{backupWeight}</span>
+                        </div>
+
+                        <input
+                          type="range"
+                          min="0"
+                          max="10"
+                          value={backupWeight}
+                          onChange={(e) =>
+                            setBackupWeight(Number(e.target.value))
+                          }
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <input
