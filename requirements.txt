@@ -29,3 +29,4 @@ websockets==17.3
 airportsdata==20261103
 langchain
 langchain-openai
+mcp[cli]>=2,<3
