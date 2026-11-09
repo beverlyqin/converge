@@ -128,3 +128,37 @@ def test_meetup_search_openapi_schema():
     assert response_schema["items"]["$ref"] == (
         "#/components/schemas/MeetupSearchResult"
     )
+
+def test_search_meetups_rejects_unknown_airport():
+    client = TestClient(app)
+
+    response = client.post(
+        "/meetups/search",
+        json={
+            "traveler_a": {
+                "origin": "XXX",
+                "depart_after": "2026-11-13T17:00:00",
+                "depart_before": "2026-11-13T23:59:00",
+            },
+            "traveler_b": {
+                "origin": "SEA",
+                "depart_after": "2026-11-13T14:00:00-08:00",
+                "depart_before": "2026-11-13T20:00:00-08:00",
+            },
+            "constraints": {
+                "max_stops": 0,
+                "max_arrival_gap_minutes": 60,
+            },
+            "weights": {
+                "arrival_sync": 0.5,
+                "stops": 0.2,
+                "travel_time": 0.3,
+                "backup_options": 0.0,
+            },
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "Unknown airport timezone: XXX"
+    }
