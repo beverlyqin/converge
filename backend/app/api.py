@@ -9,13 +9,28 @@ from backend.app.providers.oag import OAGFlightProvider
 from backend.app.ranking.scoring import RankingWeights
 from backend.app.search import search_ranked_meetups
 
+
 app = FastAPI()
+
 
 class MeetupSearchRequest(BaseModel):
     traveler_a: TravelerRequest
     traveler_b: TravelerRequest
     constraints: SearchConstraints
     weights: RankingWeights
+
+
+class AgentMeetupRequest(BaseModel):
+    question: str
+
+
+def run_agent(question: str) -> str:
+    """Lazy import keeps API startup/tests independent from Gemini initialization."""
+
+    from backend.app.agent.meetup_agent import run_meetup_agent
+
+    return run_meetup_agent(question)
+
 
 @app.post("/meetups/search")
 def search_meetups(request: MeetupSearchRequest):
@@ -49,3 +64,10 @@ def search_meetups(request: MeetupSearchRequest):
             total_score,
         ) in ranked
     ]
+
+
+@app.post("/agent/meetup")
+def agent_meetup(request: AgentMeetupRequest):
+    return {
+        "answer": run_agent(request.question),
+    }
