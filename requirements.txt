@@ -27,6 +27,18 @@ uvloop==0.23.0
 watchfiles==1.3.0
 websockets==17.3
 airportsdata==20261103
+
+# RAG / LLM
+beautifulsoup4
 langchain
+langchain-google-genai
+langchain-huggingface
 langchain-openai
+langchain-text-splitters
+nltk
+rank-bm25
+sentence-transformers
+transformers
+
+# MCP
 mcp[cli]>=2,<3
