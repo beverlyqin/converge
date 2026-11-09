@@ -1,3 +1,5 @@
+import os 
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 
@@ -6,6 +8,7 @@ from backend.app.domain.models import (
     SearchConstraints,
     TravelerRequest,
 )
+from backend.app.providers.mock import MockFlightProvider
 from backend.app.providers.oag import OAGFlightProvider
 from backend.app.ranking.scoring import RankingWeights
 from backend.app.search import search_ranked_meetups
@@ -51,10 +54,15 @@ def run_agent(question: str) -> str:
 
     return run_meetup_agent(question)
 
+def get_flight_provider():
+    if os.getenv("FLIGHT_PROVIDER") == "mock":
+        return MockFlightProvider()
+
+    return OAGFlightProvider()
 
 @app.post("/meetups/search", response_model=list[MeetupSearchResult])
 def search_meetups(request: MeetupSearchRequest) -> list[MeetupSearchResult]:
-    provider = OAGFlightProvider()
+    provider = get_flight_provider()
     ranked = search_ranked_meetups(
         provider,
         request.traveler_a,
