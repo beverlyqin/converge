@@ -1,3 +1,4 @@
+from functools import lru_cache
 from pathlib import Path
 
 from langchain_core.tools import tool
@@ -13,10 +14,15 @@ from backend.app.rag.lounge_retrieval import (
 project_root = Path(__file__).resolve().parents[3]
 chunks_path = project_root / "data" / "rag" / "chunks.json"
 
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2",
-    model_kwargs={"device": "cpu"},
-)
+
+@lru_cache(maxsize=1)
+def get_embeddings() -> HuggingFaceEmbeddings:
+    """Load the embedding model only when policy retrieval actually needs it."""
+
+    return HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2",
+        model_kwargs={"device": "cpu"},
+    )
 
 
 @tool
@@ -28,14 +34,14 @@ def find_lounges(
 
     chunks = load_chunks(chunks_path)
 
-    networks, lounges = find_candidate_lounges(
+    _, lounges = find_candidate_lounges(
         chunks=chunks,
         card=card,
         airport=airport,
     )
 
     matched_networks = {
-    lounge["metadata"]["lounge_network"]
+        lounge["metadata"]["lounge_network"]
         for lounge in lounges
     }
 
@@ -64,7 +70,7 @@ def get_lounge_policy(
 
     results = retrieve_policy_for_network(
         chunks=chunks,
-        embeddings=embeddings,
+        embeddings=get_embeddings(),
         card=card,
         lounge_network=lounge_network,
         k=2,
