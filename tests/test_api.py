@@ -162,3 +162,145 @@ def test_search_meetups_rejects_unknown_airport():
     assert response.json() == {
         "detail": "Unknown airport timezone: XXX"
     }
+
+
+def test_search_meetups_returns_round_trip_itineraries(monkeypatch):
+    class RoundTripProvider:
+        def get_flights(
+            self,
+            origin,
+            depart_after,
+            depart_before,
+        ):
+            if origin == "JFK":
+                return [
+                    FlightSegment(
+                        flight_number="DL100",
+                        operating_carrier="DL",
+                        origin="JFK",
+                        destination="MIA",
+                        departure_time="2026-11-14T03:00:00+00:00",
+                        arrival_time="2026-11-14T06:15:00+00:00",
+                    )
+                ]
+
+            if origin == "SEA":
+                return [
+                    FlightSegment(
+                        flight_number="DL200",
+                        operating_carrier="DL",
+                        origin="SEA",
+                        destination="MIA",
+                        departure_time="2026-11-13T23:00:00+00:00",
+                        arrival_time="2026-11-14T06:20:00+00:00",
+                    )
+                ]
+
+            if origin == "MIA":
+                return [
+                    FlightSegment(
+                        flight_number="DL300",
+                        operating_carrier="DL",
+                        origin="MIA",
+                        destination="JFK",
+                        departure_time="2026-11-15T23:00:00+00:00",
+                        arrival_time="2026-11-16T02:00:00+00:00",
+                    ),
+                    FlightSegment(
+                        flight_number="DL400",
+                        operating_carrier="DL",
+                        origin="MIA",
+                        destination="SEA",
+                        departure_time="2026-11-15T23:30:00+00:00",
+                        arrival_time="2026-11-16T06:00:00+00:00",
+                    ),
+                ]
+
+            return []
+
+    monkeypatch.setattr(
+        "backend.app.api.OAGFlightProvider",
+        lambda: RoundTripProvider(),
+    )
+
+    client = TestClient(app)
+
+    response = client.post(
+        "/meetups/search",
+        json={
+            "traveler_a": {
+                "origin": "JFK",
+                "depart_after": "2026-11-13T17:00:00-05:00",
+                "depart_before": "2026-11-13T23:59:00-05:00",
+                "return_after": "2026-11-15T17:00:00-05:00",
+                "return_before": "2026-11-15T23:59:00-05:00",
+            },
+            "traveler_b": {
+                "origin": "SEA",
+                "depart_after": "2026-11-13T14:00:00-08:00",
+                "depart_before": "2026-11-13T20:00:00-08:00",
+                "return_after": "2026-11-15T13:00:00-08:00",
+                "return_before": "2026-11-15T20:00:00-08:00",
+            },
+            "constraints": {
+                "max_stops": 0,
+                "max_arrival_gap_minutes": 60,
+            },
+            "weights": {
+                "arrival_sync": 0.5,
+                "stops": 0.2,
+                "travel_time": 0.3,
+                "backup_options": 0.0,
+            },
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 1
+    assert data[0]["return_itinerary_a"]["segments"][0]["flight_number"] == "DL300"
+    assert data[0]["return_itinerary_b"]["segments"][0]["flight_number"] == "DL400"
+
+
+def test_round_trip_without_returns_does_not_fall_back_to_outbound(monkeypatch):
+    monkeypatch.setattr(
+        "backend.app.api.OAGFlightProvider",
+        lambda: FakeFlightProvider(),
+    )
+
+    client = TestClient(app)
+
+    response = client.post(
+        "/meetups/search",
+        json={
+            "traveler_a": {
+                "origin": "JFK",
+                "depart_after": "2026-11-13T17:00:00-05:00",
+                "depart_before": "2026-11-13T23:59:00-05:00",
+                "return_after": "2026-11-15T17:00:00-05:00",
+                "return_before": "2026-11-15T23:59:00-05:00",
+            },
+            "traveler_b": {
+                "origin": "SEA",
+                "depart_after": "2026-11-13T14:00:00-08:00",
+                "depart_before": "2026-11-13T20:00:00-08:00",
+                "return_after": "2026-11-15T13:00:00-08:00",
+                "return_before": "2026-11-15T20:00:00-08:00",
+            },
+            "constraints": {
+                "max_stops": 0,
+                "max_arrival_gap_minutes": 60,
+            },
+            "weights": {
+                "arrival_sync": 0.5,
+                "stops": 0.2,
+                "travel_time": 0.3,
+                "backup_options": 0.0,
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == []
