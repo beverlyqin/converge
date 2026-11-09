@@ -11,13 +11,14 @@ from backend.app.domain.models import (
 from backend.app.providers.mock import MockFlightProvider
 from backend.app.providers.oag import OAGFlightProvider
 from backend.app.ranking.scoring import RankingWeights
-from backend.app.search import search_ranked_meetups
+from backend.app.search import search_ranked_meetups_with_returns
 from backend.app.ranking.explanations import (
     DestinationExplanation,
     explain_destination,
 )
 from backend.app.ranking.metrics import RankingMetrics
 from backend.app.airports.timezones import get_airport_timezone
+from backend.app.routing.reachability import get_return_flights
 
 app = FastAPI()
 
@@ -40,6 +41,8 @@ class MeetupSearchResult(BaseModel):
     backup_options: int
     itinerary_a: Itinerary
     itinerary_b: Itinerary
+    return_itinerary_a: Itinerary | None = None
+    return_itinerary_b: Itinerary | None = None
     metrics: RankingMetrics
     component_scores: ComponentScores
     explanation: DestinationExplanation
@@ -81,6 +84,28 @@ def localize_traveler_request(
         }
     )
 
+def get_best_return_itinerary(
+    flights,
+    traveler: TravelerRequest,
+    destination: str,
+) -> Itinerary | None:
+    matching = get_return_flights(
+        flights,
+        traveler,
+        destination,
+    )
+
+    if not matching:
+        return None
+
+    best_flight = min(
+        matching,
+        key=lambda flight: flight.departure_time,
+    )
+
+    return Itinerary(segments=[best_flight])
+
+
 @app.post("/meetups/search", response_model=list[MeetupSearchResult])
 def search_meetups(request: MeetupSearchRequest) -> list[MeetupSearchResult]:
     try:
@@ -93,7 +118,11 @@ def search_meetups(request: MeetupSearchRequest) -> list[MeetupSearchResult]:
         ) from exc
 
     provider = get_flight_provider()
-    ranked = search_ranked_meetups(
+    (
+        ranked,
+        return_flights_a,
+        return_flights_b,
+    ) = search_ranked_meetups_with_returns(
         provider,
         traveler_a,
         traveler_b,
@@ -108,6 +137,16 @@ def search_meetups(request: MeetupSearchRequest) -> list[MeetupSearchResult]:
             "backup_options": backup_count,
             "itinerary_a": scored_pair.itinerary_a,
             "itinerary_b": scored_pair.itinerary_b,
+            "return_itinerary_a": get_best_return_itinerary(
+                return_flights_a,
+                traveler_a,
+                destination,
+            ),
+            "return_itinerary_b": get_best_return_itinerary(
+                return_flights_b,
+                traveler_b,
+                destination,
+            ),
             "metrics": scored_pair.metrics,
             "component_scores": {
                 "arrival_sync": scored_pair.arrival_sync_score,
