@@ -16,13 +16,13 @@ from backend.app.ranking.scoring import (
     rank_destinations,
 )
 
-def search_meetup_itineraries(
+def search_meetup_itineraries_with_returns(
     provider: FlightProvider,
     traveler_a: TravelerRequest,
     traveler_b: TravelerRequest,
     constraints: SearchConstraints,
 ):
-    """Find feasible meetup itineraries using provider-fetched schedules."""
+    """Find meetup pairs and retain fetched return schedules for reuse."""
 
     flights_a = collect_traveler_schedules(
         provider,
@@ -46,7 +46,7 @@ def search_meetup_itineraries(
     )
 
     if not outbound_pairs:
-        return []
+        return [], [], []
 
     candidate_destinations = {
         itinerary_a.destination
@@ -65,21 +65,66 @@ def search_meetup_itineraries(
         candidate_destinations,
     )
 
-    if not return_flights_a and not return_flights_b:
-        return outbound_pairs
-
     all_flights = (
         outbound_flights
         + return_flights_a
         + return_flights_b
     )
 
-    return search_meeting_itineraries(
+    pairs = search_meeting_itineraries(
         all_flights,
         traveler_a,
         traveler_b,
         constraints,
     )
+
+    return pairs, return_flights_a, return_flights_b
+
+
+def search_meetup_itineraries(
+    provider: FlightProvider,
+    traveler_a: TravelerRequest,
+    traveler_b: TravelerRequest,
+    constraints: SearchConstraints,
+):
+    """Find feasible meetup itineraries using provider-fetched schedules."""
+
+    pairs, _, _ = search_meetup_itineraries_with_returns(
+        provider,
+        traveler_a,
+        traveler_b,
+        constraints,
+    )
+
+    return pairs
+
+def search_ranked_meetups_with_returns(
+    provider: FlightProvider,
+    traveler_a: TravelerRequest,
+    traveler_b: TravelerRequest,
+    constraints: SearchConstraints,
+    weights: RankingWeights,
+):
+    """Rank meetup destinations and retain return schedules for the API."""
+
+    pairs, return_flights_a, return_flights_b = (
+        search_meetup_itineraries_with_returns(
+            provider,
+            traveler_a,
+            traveler_b,
+            constraints,
+        )
+    )
+
+    return (
+        rank_destinations(
+            pairs,
+            weights,
+        ),
+        return_flights_a,
+        return_flights_b,
+    )
+
 
 def search_ranked_meetups(
     provider: FlightProvider,
