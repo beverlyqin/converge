@@ -45,6 +45,14 @@ function formatDateTime(value: string) {
   });
 }
 
+function isValidAirportCode(value: string) {
+  return /^[A-Za-z]{3}$/.test(value.trim());
+}
+
+function isChronological(start: string, end: string) {
+  return Boolean(start && end && start < end);
+}
+
 function ItineraryCard({
   label,
   itinerary,
@@ -144,6 +152,45 @@ export default function Home() {
     setError("");
     setResults([]);
 
+    if (!isValidAirportCode(originA) || !isValidAirportCode(originB)) {
+      setError("Enter a valid 3-letter airport code for each traveler.");
+      setLoading(false);
+      return;
+    }
+
+    if (
+      !isChronological(departAfterA, departBeforeA) ||
+      !isChronological(departAfterB, departBeforeB)
+    ) {
+      setError("Each latest departure must be after its earliest departure.");
+      setLoading(false);
+      return;
+    }
+
+    if (
+      roundTrip &&
+      (
+        !isChronological(returnAfterA, returnBeforeA) ||
+        !isChronological(returnAfterB, returnBeforeB)
+      )
+    ) {
+      setError("Each latest return must be after its earliest return.");
+      setLoading(false);
+      return;
+    }
+
+    if (
+      roundTrip &&
+      (
+        returnAfterA <= departBeforeA ||
+        returnAfterB <= departBeforeB
+      )
+    ) {
+      setError("Return windows must begin after the outbound departure windows.");
+      setLoading(false);
+      return;
+    }
+
     const totalWeight =
     arrivalWeight +
     stopsWeight +
@@ -197,7 +244,19 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error("Search failed. Check that the backend is running.");
+        let message = "Search failed. Check your inputs and try again.";
+
+        try {
+          const errorBody = await response.json();
+
+          if (typeof errorBody.detail === "string") {
+            message = errorBody.detail;
+          }
+        } catch {
+          // Keep the fallback message when the response is not JSON.
+        }
+
+        throw new Error(message);
       }
 
       const data: MeetupSearchResult[] = await response.json();

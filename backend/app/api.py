@@ -1,6 +1,6 @@
 import os 
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from backend.app.domain.models import (
@@ -83,8 +83,15 @@ def localize_traveler_request(
 
 @app.post("/meetups/search", response_model=list[MeetupSearchResult])
 def search_meetups(request: MeetupSearchRequest) -> list[MeetupSearchResult]:
-    traveler_a = localize_traveler_request(request.traveler_a)
-    traveler_b = localize_traveler_request(request.traveler_b)
+    try:
+        traveler_a = localize_traveler_request(request.traveler_a)
+        traveler_b = localize_traveler_request(request.traveler_b)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
+
     provider = get_flight_provider()
     ranked = search_ranked_meetups(
         provider,
