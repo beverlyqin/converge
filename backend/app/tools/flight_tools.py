@@ -1,5 +1,6 @@
+from datetime import datetime, timedelta
+
 from langchain_core.tools import tool
-from datetime import datetime
 
 from backend.app.airports.timezones import get_airport_timezone
 from backend.app.domain.models import (
@@ -9,6 +10,7 @@ from backend.app.domain.models import (
 from backend.app.providers.mock import MockFlightProvider
 from backend.app.ranking.scoring import RankingWeights
 from backend.app.search import search_ranked_meetups
+
 
 def parse_local_datetime(
     value: str,
@@ -25,6 +27,19 @@ def parse_local_datetime(
 
     return parsed
 
+
+def normalize_departure_window(
+    depart_after: datetime,
+    depart_before: datetime,
+) -> tuple[datetime, datetime]:
+    """Treat an end time at/before the start as an overnight window."""
+
+    if depart_before <= depart_after:
+        depart_before += timedelta(days=1)
+
+    return depart_after, depart_before
+
+
 @tool
 def search_meetup_options(
     origin_a: str,
@@ -40,28 +55,38 @@ def search_meetup_options(
 
     provider = MockFlightProvider()
 
-    traveler_a = TravelerRequest(
-        origin=origin_a,
-        depart_after=parse_local_datetime(
+    after_a, before_a = normalize_departure_window(
+        parse_local_datetime(
             depart_after_a,
             origin_a,
         ),
-        depart_before=parse_local_datetime(
+        parse_local_datetime(
             depart_before_a,
             origin_a,
         ),
     )
 
-    traveler_b = TravelerRequest(
-        origin=origin_b,
-        depart_after=parse_local_datetime(
+    after_b, before_b = normalize_departure_window(
+        parse_local_datetime(
             depart_after_b,
             origin_b,
         ),
-        depart_before=parse_local_datetime(
+        parse_local_datetime(
             depart_before_b,
             origin_b,
         ),
+    )
+
+    traveler_a = TravelerRequest(
+        origin=origin_a,
+        depart_after=after_a,
+        depart_before=before_a,
+    )
+
+    traveler_b = TravelerRequest(
+        origin=origin_b,
+        depart_after=after_b,
+        depart_before=before_b,
     )
 
     constraints = SearchConstraints(
@@ -108,4 +133,3 @@ def search_meetup_options(
             ) in ranked
         ]
     }
-

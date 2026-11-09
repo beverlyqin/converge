@@ -81,3 +81,30 @@ def test_search_meetups_endpoint(monkeypatch):
     assert len(data[0]["itinerary_b"]["segments"]) == 1 
     assert "metrics" in data[0]
     assert "component_scores" in data[0]
+
+
+def test_agent_meetup_endpoint(monkeypatch):
+    monkeypatch.setattr(
+        "backend.app.api.run_agent",
+        lambda question: f"agent answer for: {question}",
+    )
+
+    client = TestClient(app)
+
+    response = client.post(
+        "/agent/meetup",
+        json={
+            "question": (
+                "Find a meetup destination for JFK and SEA "
+                "and tell me about JFK lounges."
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "answer": (
+            "agent answer for: Find a meetup destination for JFK and SEA "
+            "and tell me about JFK lounges."
+        )
+    }
