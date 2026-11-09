@@ -27,6 +27,7 @@
         "document_type": "credit_card_lounge_policy",
         "card": "Delta Reserve",
         "airport": null,
+        "lounge_network": "Centurion Lounge",
         "retrieved_at": "2026-11-06"
     },
     {
@@ -37,6 +38,7 @@
       "document_type": "credit_card_lounge_policy",
       "card": "Delta Reserve",
       "airport": null,
+      "lounge_network": "Centurion Lounge",
       "retrieved_at": "2026-11-05"
     },
     {

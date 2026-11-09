@@ -74,6 +74,16 @@ tokenizer = AutoTokenizer.from_pretrained(
 
 chunks = []
 
+def infer_lounge_network(section):
+    mapping = {
+        "The Centurion Lounge": "Centurion Lounge",
+        "Delta Sky Club": "Delta Sky Club",
+        "Escape Lounges": "Escape Lounge",
+        "Plaza Premium Lounges": "Plaza Premium Lounge",
+        "Priority Pass": "Priority Pass",
+    }
+
+    return mapping.get(section)
 
 for source in sources:
     cleaned_path = cleaned_dir / f'{source["id"]}.md'
@@ -122,7 +132,10 @@ for source in sources:
                 "document_type": source["document_type"],
                 "card": source.get("card"),
                 "airport": source.get("airport"),
-                "lounge_network": source.get("lounge_network"),
+                "lounge_network": (
+                    source.get("lounge_network")
+                    or infer_lounge_network(section)
+                ),
                 "retrieved_at": source.get("retrieved_at"),
             }
                 
@@ -132,6 +145,7 @@ for source in sources:
                     metadata=metadata,
                 )
             )
+
 
 
 chunk_data = [
