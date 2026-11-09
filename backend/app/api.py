@@ -17,6 +17,7 @@ from backend.app.ranking.explanations import (
     explain_destination,
 )
 from backend.app.ranking.metrics import RankingMetrics
+from backend.app.airports.timezones import get_airport_timezone
 
 app = FastAPI()
 
@@ -60,13 +61,35 @@ def get_flight_provider():
 
     return OAGFlightProvider()
 
+def localize_traveler_request(
+    traveler: TravelerRequest,
+) -> TravelerRequest:
+    timezone = get_airport_timezone(traveler.origin)
+
+    def localize(value):
+        if value is None or value.tzinfo is not None:
+            return value
+
+        return value.replace(tzinfo=timezone)
+
+    return traveler.model_copy(
+        update={
+            "depart_after": localize(traveler.depart_after),
+            "depart_before": localize(traveler.depart_before),
+            "return_after": localize(traveler.return_after),
+            "return_before": localize(traveler.return_before),
+        }
+    )
+
 @app.post("/meetups/search", response_model=list[MeetupSearchResult])
 def search_meetups(request: MeetupSearchRequest) -> list[MeetupSearchResult]:
+    traveler_a = localize_traveler_request(request.traveler_a)
+    traveler_b = localize_traveler_request(request.traveler_b)
     provider = get_flight_provider()
     ranked = search_ranked_meetups(
         provider,
-        request.traveler_a,
-        request.traveler_b,
+        traveler_a,
+        traveler_b,
         request.constraints,
         request.weights,
     )

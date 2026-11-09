@@ -98,19 +98,17 @@ export default function Home() {
   const [originA, setOriginA] = useState("JFK");
   const [originB, setOriginB] = useState("SEA");
 
-  const [departAfterA, setDepartAfterA] = useState(
-    "2026-11-13T17:00:00-05:00"
-  );
-  const [departBeforeA, setDepartBeforeA] = useState(
-    "2026-11-13T23:59:00-05:00"
-  );
+  const [departAfterA, setDepartAfterA] =
+    useState("2026-11-13T17:00");
 
-  const [departAfterB, setDepartAfterB] = useState(
-    "2026-11-13T14:00:00-08:00"
-  );
-  const [departBeforeB, setDepartBeforeB] = useState(
-    "2026-11-13T20:00:00-08:00"
-  );
+  const [departBeforeA, setDepartBeforeA] =
+    useState("2026-11-13T23:59");
+
+  const [departAfterB, setDepartAfterB] =
+    useState("2026-11-13T14:00");
+
+  const [departBeforeB, setDepartBeforeB] =
+    useState("2026-11-13T20:00");
 
   const [maxStops, setMaxStops] = useState(1);
   const [maxArrivalGap, setMaxArrivalGap] = useState(120);
@@ -213,13 +211,23 @@ export default function Home() {
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 uppercase outline-none transition focus:border-slate-400"
                   />
 
+                  <label className="block text-xs font-medium text-slate-500">
+                    Earliest departure
+                  </label>
+
                   <input
+                    type="datetime-local"
                     value={departAfterA}
                     onChange={(e) => setDepartAfterA(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
                   />
+                  
+                  <label className="block text-xs font-medium text-slate-500">
+                    Earliest departure
+                  </label>
 
                   <input
+                    type="datetime-local"
                     value={departBeforeA}
                     onChange={(e) => setDepartBeforeA(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
@@ -241,19 +249,33 @@ export default function Home() {
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 uppercase outline-none transition focus:border-slate-400"
                   />
 
+                  <label className="block text-xs font-medium text-slate-500">
+                    Earliest departure
+                  </label>
+
                   <input
+                    type="datetime-local"
                     value={departAfterB}
                     onChange={(e) => setDepartAfterB(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
                   />
 
+                  <label className="block text-xs font-medium text-slate-500">
+                    Latest departure
+                  </label>
+
                   <input
+                    type="datetime-local"
                     value={departBeforeB}
                     onChange={(e) => setDepartBeforeB(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
                   />
                 </div>
               </section>
+
+              <p className="text-xs text-slate-400">
+                Departure times are interpreted in each origin airport&apos;s local time.
+              </p>
 
               <div className="border-t border-slate-100" />
 
