@@ -21,6 +21,8 @@ type MeetupSearchResult = {
   backup_options: number;
   itinerary_a: Itinerary;
   itinerary_b: Itinerary;
+  return_itinerary_a: Itinerary | null;
+  return_itinerary_b: Itinerary | null;
   metrics: {
     arrival_gap_minutes: number;
     total_stops: number;
@@ -697,17 +699,45 @@ export default function Home() {
                         </div>
                       </div>
 
-                      <div className="grid gap-3">
-                        <ItineraryCard
-                          label="Traveler A"
-                          itinerary={result.itinerary_a}
-                        />
+                      <div>
+                        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                          Outbound
+                        </p>
 
-                        <ItineraryCard
-                          label="Traveler B"
-                          itinerary={result.itinerary_b}
-                        />
+                        <div className="grid gap-3">
+                          <ItineraryCard
+                            label="Traveler A"
+                            itinerary={result.itinerary_a}
+                          />
+
+                          <ItineraryCard
+                            label="Traveler B"
+                            itinerary={result.itinerary_b}
+                          />
+                        </div>
                       </div>
+
+                      {roundTrip &&
+                        result.return_itinerary_a &&
+                        result.return_itinerary_b && (
+                          <div className="mt-5 border-t border-slate-100 pt-5">
+                            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                              Return
+                            </p>
+
+                            <div className="grid gap-3">
+                              <ItineraryCard
+                                label="Traveler A"
+                                itinerary={result.return_itinerary_a}
+                              />
+
+                              <ItineraryCard
+                                label="Traveler B"
+                                itinerary={result.return_itinerary_b}
+                              />
+                            </div>
+                          </div>
+                        )}
 
                       <div className="mt-5 grid grid-cols-3 gap-3">
                         <div className="rounded-xl bg-slate-50 p-3">
