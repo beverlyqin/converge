@@ -110,3 +110,21 @@ def test_agent_meetup_endpoint(monkeypatch):
             "and tell me about JFK lounges."
         )
     }
+
+def test_meetup_search_openapi_schema():
+    client = TestClient(app)
+
+    response = client.get("/openapi.json")
+
+    assert response.status_code == 200
+
+    schema = response.json()
+    response_schema = (
+        schema["paths"]["/meetups/search"]["post"]
+        ["responses"]["200"]["content"]["application/json"]["schema"]
+    )
+
+    assert response_schema["type"] == "array"
+    assert response_schema["items"]["$ref"] == (
+        "#/components/schemas/MeetupSearchResult"
+    )
