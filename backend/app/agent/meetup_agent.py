@@ -1,4 +1,5 @@
 import json
+from functools import lru_cache
 
 from langchain_core.messages import (
     HumanMessage,
@@ -26,13 +27,6 @@ tools_by_name = {
 }
 
 
-model = ChatGoogleGenerativeAI(
-    model="gemini-3.5-flash-lite",
-)
-
-model_with_tools = model.bind_tools(tools)
-
-
 SYSTEM_PROMPT = (
     "You are a flight meetup and airport lounge assistant. "
     "Use only information returned by the available tools. "
@@ -47,7 +41,24 @@ SYSTEM_PROMPT = (
 )
 
 
-def run_meetup_agent(question: str) -> str:
+@lru_cache(maxsize=1)
+def get_model_with_tools():
+    """Build and cache the Gemini model only when the agent is invoked."""
+
+    model = ChatGoogleGenerativeAI(
+        model="gemini-3.5-flash-lite",
+    )
+
+    return model.bind_tools(tools)
+
+
+def run_tool_loop(
+    question: str,
+    model_with_tools,
+    tool_map,
+) -> str:
+    """Run the agent loop with injectable model/tools for deterministic tests."""
+
     messages = [
         SystemMessage(content=SYSTEM_PROMPT),
         HumanMessage(content=question),
@@ -62,7 +73,7 @@ def run_meetup_agent(question: str) -> str:
             return response.text
 
         for tool_call in response.tool_calls:
-            tool = tools_by_name[tool_call["name"]]
+            tool = tool_map[tool_call["name"]]
 
             result = tool.invoke(
                 tool_call["args"]
@@ -74,3 +85,11 @@ def run_meetup_agent(question: str) -> str:
                     tool_call_id=tool_call["id"],
                 )
             )
+
+
+def run_meetup_agent(question: str) -> str:
+    return run_tool_loop(
+        question=question,
+        model_with_tools=get_model_with_tools(),
+        tool_map=tools_by_name,
+    )
