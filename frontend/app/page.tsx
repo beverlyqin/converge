@@ -110,6 +110,20 @@ export default function Home() {
   const [departBeforeB, setDepartBeforeB] =
     useState("2026-11-13T20:00");
 
+  const [roundTrip, setRoundTrip] = useState(false);
+
+  const [returnAfterA, setReturnAfterA] =
+    useState("2026-11-15T15:00");
+  
+  const [returnBeforeA, setReturnBeforeA] =
+    useState("2026-11-15T20:00");
+  
+  const [returnAfterB, setReturnAfterB] =
+    useState("2026-11-15T15:00");
+  
+  const [returnBeforeB, setReturnBeforeB] =
+    useState("2026-11-15T20:00");
+
   const [maxStops, setMaxStops] = useState(1);
   const [maxArrivalGap, setMaxArrivalGap] = useState(120);
   const [arrivalWeight, setArrivalWeight] = useState(4);
@@ -152,11 +166,19 @@ export default function Home() {
             origin: originA.toUpperCase(),
             depart_after: departAfterA,
             depart_before: departBeforeA,
+            ...(roundTrip && {
+              return_after: returnAfterA,
+              return_before: returnBeforeA,
+            }),
           },
           traveler_b: {
             origin: originB.toUpperCase(),
             depart_after: departAfterB,
             depart_before: departBeforeB,
+            ...(roundTrip && {
+              return_after: returnAfterB,
+              return_before: returnBeforeB,
+            }),
           },
           constraints: {
             max_stops: maxStops,
@@ -216,6 +238,31 @@ export default function Home() {
             </p>
 
             <div className="mt-7 space-y-7">
+              <div className="flex rounded-xl bg-slate-100 p-1">
+                <button
+                  type="button"
+                  onClick={() => setRoundTrip(false)}
+                  className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium ${
+                    !roundTrip
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500"
+                  }`}
+                >
+                  One way
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setRoundTrip(true)}
+                  className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium ${
+                    roundTrip
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500"
+                  }`}
+                >
+                  Round trip
+                </button>
+              </div>
               <section>
                 <p className="mb-3 text-sm font-semibold">Traveler A</p>
 
@@ -238,9 +285,9 @@ export default function Home() {
                     onChange={(e) => setDepartAfterA(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
                   />
-                  
+
                   <label className="block text-xs font-medium text-slate-500">
-                    Earliest departure
+                    Latest departure
                   </label>
 
                   <input
@@ -249,6 +296,32 @@ export default function Home() {
                     onChange={(e) => setDepartBeforeA(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
                   />
+
+                  {roundTrip && (
+                    <>
+                      <label className="block text-xs font-medium text-slate-500">
+                        Earliest return
+                      </label>
+
+                      <input
+                        type="datetime-local"
+                        value={returnAfterA}
+                        onChange={(e) => setReturnAfterA(e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                      />
+
+                      <label className="block text-xs font-medium text-slate-500">
+                        Latest return
+                      </label>
+
+                      <input
+                        type="datetime-local"
+                        value={returnBeforeA}
+                        onChange={(e) => setReturnBeforeA(e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                      />
+                    </>
+                  )}
                 </div>
               </section>
 
@@ -287,6 +360,32 @@ export default function Home() {
                     onChange={(e) => setDepartBeforeB(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
                   />
+
+                  {roundTrip && (
+                    <>
+                      <label className="block text-xs font-medium text-slate-500">
+                        Earliest return
+                      </label>
+
+                      <input
+                        type="datetime-local"
+                        value={returnAfterB}
+                        onChange={(e) => setReturnAfterB(e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                      />
+
+                      <label className="block text-xs font-medium text-slate-500">
+                        Latest return
+                      </label>
+
+                      <input
+                        type="datetime-local"
+                        value={returnBeforeB}
+                        onChange={(e) => setReturnBeforeB(e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                      />
+                    </>
+                  )}
                 </div>
               </section>
 
