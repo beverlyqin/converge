@@ -6,6 +6,7 @@ from backend.app.domain.models import (
     TravelerRequest,
 )
 from backend.app.providers.oag import OAGFlightProvider
+from backend.app.ranking.explanations import explain_destination
 from backend.app.ranking.scoring import RankingWeights
 from backend.app.search import search_ranked_meetups
 
@@ -56,6 +57,10 @@ def search_meetups(request: MeetupSearchRequest):
                 "stops": scored_pair.stops_score,
                 "travel_time": scored_pair.travel_time_score,
             },
+            "explanation": explain_destination(
+                scored_pair,
+                backup_count,
+            ),
         }
         for (
             destination,
