@@ -304,3 +304,64 @@ def test_round_trip_without_returns_does_not_fall_back_to_outbound(monkeypatch):
 
     assert response.status_code == 200
     assert response.json() == []
+
+
+def test_lounge_cards_endpoint(monkeypatch):
+    monkeypatch.setattr(
+        "backend.app.api.get_supported_lounge_cards",
+        lambda: ["Amex Platinum", "Capital One Venture X"],
+    )
+
+    client = TestClient(app)
+
+    response = client.get("/lounges/cards")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "cards": ["Amex Platinum", "Capital One Venture X"]
+    }
+
+
+def test_lounge_search_endpoint(monkeypatch):
+    monkeypatch.setattr(
+        "backend.app.api.get_lounge_access",
+        lambda card, airport: {
+            "matched_lounge_networks": ["Centurion Lounge"],
+            "lounges": [
+                {
+                    "name": "The Centurion Lounge",
+                    "network": "Centurion Lounge",
+                    "airport": airport,
+                    "location": "Near the main terminal.",
+                }
+            ],
+            "policies": {
+                "Centurion Lounge": [
+                    {
+                        "chunk_id": "policy-1",
+                        "content": "Cardholder access is subject to the stated policy.",
+                    }
+                ]
+            },
+        },
+    )
+
+    client = TestClient(app)
+
+    response = client.post(
+        "/lounges/search",
+        json={
+            "card": "Amex Platinum",
+            "airport": "aus",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["lounges"][0]["airport"] == "AUS"
+    assert response.json()["matched_lounge_networks"] == [
+        "Centurion Lounge"
+    ]
+    assert (
+        response.json()["policies"]["Centurion Lounge"][0]["chunk_id"]
+        == "policy-1"
+    )
