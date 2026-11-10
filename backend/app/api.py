@@ -1,8 +1,12 @@
-import os 
+import json
+import logging
+import os
+import time
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from backend.app.observability import SearchTelemetry
 from backend.app.domain.models import (
     Itinerary,
     SearchConstraints,
@@ -21,6 +25,7 @@ from backend.app.airports.timezones import get_airport_timezone
 from backend.app.routing.reachability import get_return_flights
 
 app = FastAPI()
+logger = logging.getLogger("flight_meetup.search")
 
 _oag_flight_cache = TTLFlightCache(
     ttl_seconds=float(
@@ -171,6 +176,9 @@ def search_meetups(request: MeetupSearchRequest) -> list[MeetupSearchResult]:
         ) from exc
 
     provider = get_flight_provider()
+    telemetry = SearchTelemetry()
+    started = time.perf_counter()
+
     (
         ranked,
         return_flights_a,
@@ -181,6 +189,39 @@ def search_meetups(request: MeetupSearchRequest) -> list[MeetupSearchResult]:
         traveler_b,
         request.constraints,
         request.weights,
+        telemetry,
+    )
+
+    latency_ms = (time.perf_counter() - started) * 1000
+
+    logger.info(
+        json.dumps(
+            {
+                "event": "meetup_search_completed",
+                "provider": provider.__class__.__name__,
+                "origin_a": traveler_a.origin,
+                "origin_b": traveler_b.origin,
+                "latency_ms": round(latency_ms, 2),
+                "provider_requests": getattr(
+                    provider,
+                    "request_count",
+                    0,
+                ),
+                "cache_hits": getattr(
+                    provider,
+                    "cache_hit_count",
+                    0,
+                ),
+                "cache_misses": getattr(
+                    provider,
+                    "cache_miss_count",
+                    0,
+                ),
+                "flights_retrieved": telemetry.flights_retrieved,
+                "candidate_destinations": telemetry.candidate_destinations,
+                "final_results": telemetry.final_results,
+            }
+        )
     )
 
     return [
