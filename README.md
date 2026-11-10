@@ -1,113 +1,107 @@
 # Flight Meetup
 
-Flight Meetup is a backend-first travel optimizer that finds **where two travelers should meet** instead of requiring them to choose a destination first.
+Flight Meetup is a full-stack travel optimizer that answers a different question from a normal flight search:
 
-Given two origins, departure windows, and travel constraints, the system collects flight schedules, builds feasible direct and one-stop itineraries, finds shared destinations, ranks them with explainable metrics, and enriches the result with grounded airport-lounge information.
+> **If two people are leaving from different cities, where should they meet?**
 
-The current prototype is Delta-centric and combines deterministic flight computation with RAG, LangChain tool calling, and MCP.
+Given two origins, departure/return windows, travel constraints, and ranking preferences, the app builds feasible itineraries, finds shared destinations, ranks them for group convenience, explains the recommendation, and can surface grounded airport-lounge information for supported credit cards.
+
+The project combines a deterministic flight-search engine with FastAPI, Next.js, provider abstractions, RAG, LangChain tools, Gemini tool calling, and MCP.
+
+## Demo
+
+**Frontend:** deployed on Vercel  
+**Backend:** deployed on Railway  
+**Backend API docs:** https://flightmeetup-production.up.railway.app/docs
+
+> The public deployment currently uses the local mock flight provider so visitors cannot exhaust the project's limited OAG API quota. The same backend also supports live OAG schedule retrieval when `FLIGHT_PROVIDER` is switched from `mock` and an `OAG_API_KEY` is configured.
+
+### Demo scenario
+
+A known working round-trip example is:
+
+- Traveler A: **JFK**, Nov. 13, 2026, 5:00 PM–11:59 PM
+- Traveler B: **SEA**, Nov. 13, 2026, 2:00 PM–8:00 PM
+- Return: Nov. 15, 2026
+- Maximum arrival gap: 120 minutes
+- Maximum stops: 1
+
+The app recommends **Austin (AUS)** with:
+
+- JFK → AUS: Delta DL123
+- SEA → AUS: Delta DL300
+- AUS → JFK: Delta DL501
+- AUS → SEA: Delta DL502
+
+For **Amex Platinum**, the AUS result can also surface the Delta Sky Club location and grounded access-policy evidence.
 
 ## What it demonstrates
 
-- Multi-traveler destination search rather than single-origin flight search
-- Deterministic direct + one-stop itinerary construction
-- Explainable ranking using arrival synchronization, stops, travel time, and backup options
-- Provider abstraction with local mock data and live OAG schedule retrieval
-- Timezone-aware connection planning with DST-safe airport timezones
-- API-quota protections for live schedule providers
-- Official-source lounge RAG with retrieval evaluation
-- LangChain tools and multi-step Gemini tool calling
-- MCP exposure of the same stable backend capabilities
-- 64 automated tests
-
-## Example
-
-The deterministic agent demo currently includes a fixture where:
-
-- Traveler A leaves **JFK** between 5 PM and midnight Eastern
-- Traveler B leaves **SEA** between 2 PM and 8 PM Pacific
-- Maximum arrival gap is 2 hours
-- Maximum stops is 1
-
-The system recommends **Austin (AUS)**:
-
-- JFK → AUS: Delta DL123, nonstop
-- SEA → AUS: Delta DL300, nonstop
-- Arrival gap: **95 minutes**
-
-For an Amex Platinum traveler departing JFK, the agent can then discover matching physical lounges and retrieve the relevant access-policy evidence before generating an answer.
-
-> The agent demo intentionally uses the local mock flight provider so repeated LLM/tool tests do not consume OAG API quota. Live OAG-backed search is implemented separately through the provider/API layer.
+- Multi-origin destination search instead of single-origin flight search
+- Direct and bounded one-stop itinerary construction
+- Timezone-aware outbound and return-window handling
+- Explainable ranking across arrival synchronization, stops, travel time, fairness, and backup options
+- User-tunable ranking preferences
+- Round-trip feasibility with actual return itineraries
+- Provider abstraction for local mock data and live OAG schedules
+- API-quota protections for external flight data
+- Grounded lounge/card retrieval from curated official-source data
+- LangChain tool wrappers and Gemini multi-step tool calling
+- MCP exposure of the same backend capabilities
+- Next.js frontend with FastAPI backend
+- Automated backend tests plus frontend production builds
+- Production deployment with Vercel + Railway
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    U[User request] --> A[Meetup Agent]
+    U[User] --> FE[Next.js frontend<br/>Vercel]
+    FE --> P[Next.js API proxy]
+    P --> API[FastAPI backend<br/>Railway]
 
-    A --> FT[search_meetup_options]
-    FT --> S[Deterministic search + ranking]
+    API --> S[Deterministic meetup search]
     S --> MP[MockFlightProvider]
     S --> OP[OAGFlightProvider]
 
+    API --> LR[Lounge retrieval]
+    LR --> C[Curated lounge/card corpus]
+    LR --> DR[Metadata routing + retrieval]
+
+    API --> A[Gemini agent]
+    A --> FT[search_meetup_options]
     A --> FL[find_lounges]
     A --> GP[get_lounge_policy]
 
-    FL --> RAG[Lounge RAG layer]
-    GP --> RAG
-    RAG --> C[Official-source lounge/card corpus]
-    RAG --> D[Metadata routing + dense retrieval]
-
-    FT --> A
-    FL --> A
-    GP --> A
-    A --> G[Grounded final answer]
-
-    MCP[MCPServer] --> FT
+    MCP[MCP server] --> FT
     MCP --> FL
     MCP --> GP
 ```
 
-### Layering
-
-```text
-backend/app/domain + routing + ranking
-        ↓
-deterministic flight engine
-
-backend/app/providers
-        ↓
-Mock / OAG schedule sources
-
-backend/app/rag
-        ↓
-retrieval and lounge-policy logic
-
-backend/app/tools
-        ↓
-thin LangChain-facing wrappers
-
-backend/app/agent
-        ↓
-Gemini tool orchestration
-
-backend/app/mcp_server.py
-        ↓
-same capabilities exposed through MCP
-```
-
 A core design rule is that the LLM does **not** calculate flight feasibility, connection timing, or ranking. Those remain deterministic Python responsibilities. The model decides which tools to call and turns structured tool results into a user-facing response.
+
+## Product flow
+
+1. Enter two traveler origins and departure windows.
+2. Choose one-way or round-trip.
+3. Set hard constraints such as maximum stops and arrival gap.
+4. Adjust ranking preferences.
+5. Search for shared destinations.
+6. Review ranked itinerary pairs, raw metrics, and explanations.
+7. Optionally choose a supported credit card and check lounge access at a recommended destination.
 
 ## Flight search and ranking
 
-The flight engine:
+The deterministic flight engine:
 
 1. Collects schedules for each traveler.
 2. Builds direct and bounded one-stop itineraries.
 3. Enforces a 45-minute minimum connection and 4-hour maximum layover.
 4. Finds common meeting destinations.
 5. Applies hard constraints such as maximum stops, travel time, and arrival gap.
-6. Scores feasible itinerary pairs.
-7. Ranks destinations while retaining raw metrics for explainability.
+6. Checks return feasibility for round-trip searches.
+7. Scores feasible itinerary pairs.
+8. Ranks destinations while retaining raw metrics for explainability.
 
 The OAG provider is isolated behind a `FlightProvider` interface, so routing and ranking do not depend on HTTP.
 
@@ -119,35 +113,44 @@ Live-provider safeguards include:
 - 429 / `Retry-After` handling
 - Pagination controls
 - Query deduplication
-- Normal pytest blocking of accidental live OAG calls
+- Tests that avoid accidental live OAG calls
 
-## Lounge RAG
+## Lounge intelligence
 
-The RAG subsystem is intentionally narrow: it handles airport lounge locations and credit-card lounge-access policy rather than general airline policy.
+The lounge subsystem intentionally focuses on a narrow, grounded question: **which lounges match a supported card at a specific airport, and what source-backed policy evidence applies?**
 
-Pipeline:
+The corpus stores structured metadata such as:
+
+- card
+- airport
+- lounge network
+- document type
+- source
+- retrieval date
+
+Current curated location coverage includes airports such as **JFK, MIA, AUS, ATL, SEA, and LAX**, with supported card-policy data including **Amex Platinum** and **Delta Reserve**.
+
+The retrieval pipeline is:
 
 ```text
 official source pages
         ↓
-semantic extraction
+cleaned / structured content
         ↓
-structured Markdown
+chunked policy + lounge-location documents
         ↓
-sentence-aware tokenizer-safe chunks
+metadata routing by card / airport / lounge network
         ↓
-metadata: card / airport / lounge network / source
+retrieval
         ↓
-BM25 / dense / hybrid experiments
-        ↓
-metadata-routed dense retrieval
-        ↓
-policy evidence returned to the agent
+grounded policy evidence
 ```
 
-Current corpus work includes Amex Platinum lounge policy, Delta Reserve/Centurion policy, JFK lounge locations, and MIA Centurion location data.
+The frontend exposes this through a simple card selector and per-destination **Check lounges** action.
 
 ### Retrieval evaluation
+
+The project includes BM25, dense, and hybrid retrieval experiments.
 
 On the initial 11-query development set:
 
@@ -157,7 +160,7 @@ On the initial 11-query development set:
 | Dense | 0.455 | **1.000** | 0.727 |
 | Equal-weight hybrid RRF | **0.636** | 0.818 | **0.738** |
 
-Dense retrieval was selected for top-k context retrieval because it gave the strongest top-3 recall. After adding metadata routing by card / lounge network, the current 15-query product evaluation reached **15/15 at k=3**.
+After metadata routing by card / lounge network, the product evaluation reached **15/15 at k=3** on the current development set.
 
 These are development-set results, not production benchmarks.
 
@@ -191,7 +194,7 @@ Tool wrappers stay thin; the business and retrieval logic remains reusable outsi
 
 ## MCP
 
-The same three capabilities are also exposed through an MCP server:
+The same three capabilities are exposed through an MCP server:
 
 ```text
 search_meetup_options
@@ -199,16 +202,14 @@ find_lounges
 get_lounge_policy
 ```
 
-This keeps MCP as a transport/interface layer rather than duplicating application logic.
-
-The server has been verified interactively with MCP Inspector.
+This keeps MCP as a transport/interface layer rather than duplicating application logic. The server has also been tested interactively with MCP Inspector.
 
 ## Repository structure
 
 ```text
 backend/
   app/
-    agent/          # reusable Gemini tool-calling loop
+    agent/          # Gemini tool-calling loop
     airports/       # airport timezone utilities
     domain/         # core Pydantic models
     providers/      # mock + OAG provider adapters
@@ -216,11 +217,16 @@ backend/
     ranking/        # scoring and ranking
     routing/        # itinerary construction / reachability
     tools/          # LangChain tool wrappers
-    api.py          # FastAPI endpoint
+    api.py          # FastAPI endpoints
     mcp_server.py   # MCP adapter
 
+frontend/
+  app/
+    api/            # Next.js proxy routes
+    page.tsx        # search + results UI
+
 data/
-  rag/              # source registry, cleaned docs, chunks, eval sets
+  rag/              # lounge/card corpus, chunks, evaluation data
 
 scripts/
   ingest_rag.py
@@ -234,17 +240,21 @@ scripts/
   search_real_meetup.py
 
 tests/
-  # deterministic unit/integration tests; live OAG is blocked by default
+  # deterministic unit/integration tests
 ```
 
-## Quick start
+## Local development
 
-### 1. Clone and create an environment
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/beverlyqin/flight_meetup.git
 cd flight_meetup
+```
 
+### 2. Set up the Python backend
+
+```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -252,15 +262,69 @@ pip install -r requirements.txt
 
 The project is currently developed with Python 3.13.
 
-### 2. Run the test suite
+Run the backend in quota-safe mock mode:
+
+```bash
+FLIGHT_PROVIDER=mock uvicorn backend.app.api:app --reload
+```
+
+FastAPI docs will be available at:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+### 3. Run the frontend
+
+In a second terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open:
+
+```text
+http://localhost:3000
+```
+
+The frontend's Next.js API routes proxy requests to the FastAPI backend.
+
+### 4. Run tests
+
+From the repository root:
 
 ```bash
 python -m pytest
 ```
 
-Current status: **64 passing tests**.
+For the frontend:
 
-### 3. Run the deterministic agent demo
+```bash
+cd frontend
+npm run build
+```
+
+### 5. Use live OAG schedules
+
+Set:
+
+```bash
+export OAG_API_KEY="your-key"
+unset FLIGHT_PROVIDER
+```
+
+Then start FastAPI normally:
+
+```bash
+uvicorn backend.app.api:app --reload
+```
+
+Because OAG usage is quota-limited, routine development and automated tests should use the mock provider.
+
+### 6. Run the Gemini agent
 
 Set a Gemini Developer API key:
 
@@ -276,57 +340,97 @@ python -m scripts.demo_tool_calling
 
 The Google Gen AI client also supports `GEMINI_API_KEY`; set only one key variable when possible.
 
-### 4. Run live OAG-backed API search
+### 7. Inspect the MCP server
 
-Set the OAG key:
-
-```bash
-export OAG_API_KEY="your-key"
-```
-
-Start FastAPI:
-
-```bash
-uvicorn backend.app.api:app --reload
-```
-
-The live deterministic endpoint is:
-
-```text
-POST /meetups/search
-```
-
-The agent endpoint is:
-
-```text
-POST /agent/meetup
-```
-
-with a JSON body such as:
-
-```json
-{
-  "question": "Find a meetup destination for JFK and SEA and tell me about JFK lounges."
-}
-```
-
-The agent endpoint uses the reusable Gemini tool-calling loop. Because OAG usage is quota-limited, normal development and tests should use mock/fake providers.
-
-### 5. Inspect the MCP server
-
-Install `uv` if needed, then from the repository root:
+From the repository root:
 
 ```bash
 PYTHONPATH=. mcp dev backend/app/mcp_server.py
 ```
 
-Connect in MCP Inspector and inspect/call the three tools.
+Connect with MCP Inspector to inspect and call the tools.
+
+## API
+
+### Meetup search
+
+```text
+POST /meetups/search
+```
+
+Returns ranked meetup destinations, outbound itineraries, optional return itineraries, ranking metrics, component scores, backup counts, and deterministic explanations.
+
+### Lounge cards
+
+```text
+GET /lounges/cards
+```
+
+Returns cards currently represented in the lounge-policy corpus.
+
+### Lounge search
+
+```text
+POST /lounges/search
+```
+
+Returns matching physical lounges and grounded access-policy evidence for a card + airport.
+
+### Agent
+
+```text
+POST /agent/meetup
+```
+
+Runs the Gemini tool-calling loop over the reusable search and lounge tools.
+
+## Deployment
+
+The production architecture currently uses two services:
+
+```text
+Vercel
+  Next.js frontend
+       ↓ BACKEND_URL
+Railway
+  FastAPI backend
+```
+
+### Backend — Railway
+
+Start command:
+
+```bash
+uvicorn backend.app.api:app --host 0.0.0.0 --port $PORT
+```
+
+Public demo environment:
+
+```text
+FLIGHT_PROVIDER=mock
+```
+
+Backend API:
+
+https://flightmeetup-production.up.railway.app
+
+### Frontend — Vercel
+
+The frontend project uses `frontend/` as its root directory.
+
+Environment variable:
+
+```text
+BACKEND_URL=https://flightmeetup-production.up.railway.app
+```
+
+Using a server-side Next.js proxy keeps backend configuration out of the browser-facing request path.
 
 ## Design decisions
 
 ### Deterministic computation first
 
-Flight times, connection feasibility, itinerary construction, and ranking stay outside the LLM. This makes the core system testable and prevents the model from inventing flight facts.
+Flight times, connection feasibility, itinerary construction, return feasibility, and ranking stay outside the LLM. This keeps the core system testable and prevents the model from inventing flight facts.
 
 ### Provider abstraction
 
@@ -334,34 +438,34 @@ The flight engine consumes normalized `FlightSegment` objects through `FlightPro
 
 ### Quota is a system-design constraint
 
-OAG's limited request budget shaped caching, query planning, deduplication, bounded connection expansion, and the decision to keep normal tests offline.
+OAG's limited request budget shaped caching, query planning, deduplication, bounded connection expansion, and the decision to keep the public portfolio deployment in mock mode.
 
 ### Metadata before semantic similarity
 
-Lounge retrieval first narrows by structured metadata such as card, airport, and lounge network. Dense retrieval then operates only on the relevant policy subset.
+Lounge retrieval first narrows the search space using structured metadata such as card, airport, and lounge network before retrieving supporting policy evidence.
 
 ### Thin AI interfaces
 
-LangChain tools and MCP functions wrap stable backend functions rather than owning business logic. The same flight/RAG logic can therefore be reused by FastAPI, an agent, tests, or external MCP clients.
+LangChain tools and MCP functions wrap stable backend functions rather than owning business logic. The same flight/RAG logic can therefore be reused by FastAPI, the web UI, an agent, tests, or external MCP clients.
 
 ## Current limitations
 
-- Two-traveler flow is the primary supported product path.
-- Flight-data scope is Delta-centric.
-- The agent's flight-search tool currently uses the mock provider by design.
-- Live OAG integration exists but is intentionally separated from repeated LLM testing.
-- Lounge coverage is still a small curated corpus rather than a complete airport database.
-- Final LLM wording can still require grounding/fidelity guardrails for subtle policy language.
-- Web UI, deployment, CI, and production observability are not finished.
+- Two-traveler search is the primary product path.
+- Flight-data scope is currently Delta-centric.
+- The public deployment uses fixture schedules rather than unrestricted live OAG calls.
+- Lounge coverage is curated rather than a complete airport database.
+- Supported card coverage is intentionally small.
+- Ranking behavior is only as rich as the candidate destinations returned by the underlying schedule data.
+- Final agent wording still requires grounding guardrails for subtle policy language.
 
 ## Next steps
 
-- Build the web-first UI for traveler inputs and ranked destination cards
-- Add CI, Docker, and deployment
-- Expand ranking-evaluation scenarios and choose initial default weights
-- Expand lounge/card/airport coverage
-- Add production logging and latency/request monitoring
-- Capture screenshots and a 60–90 second portfolio demo
+- Add the public Vercel demo URL and screenshots to this README
+- Expand the demo fixture to show more ranking tradeoffs across multiple shared destinations
+- Add CI for backend tests and frontend builds
+- Add lightweight production logging and latency monitoring
+- Expand lounge/card coverage selectively
+- Record a short portfolio demo
 
 ## Why this project
 
@@ -371,6 +475,7 @@ The interesting part is not simply calling a flight API or adding an LLM. Flight
 - ranking decides what is convenient,
 - retrieval supplies grounded travel knowledge,
 - the LLM orchestrates those capabilities,
-- MCP makes the same capabilities reusable by external AI clients.
+- MCP makes the same capabilities reusable by external AI clients,
+- the web app turns those layers into a usable product.
 
 That separation is the core engineering story of the project.
