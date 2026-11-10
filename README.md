@@ -259,6 +259,41 @@ python -m scripts.evaluate_ranking
 
 The current 12-scenario suite is designed to verify that changing ranking weights changes the preferred destination in the expected direction. Treat this as a deterministic product-behavior evaluation set, not a real-world user-preference benchmark.
 
+### Controlled live OAG evaluation
+
+A separate opt-in harness evaluates the real OAG-backed direct-search path without turning the repository's normal tests into live API calls.
+
+The default scenario set uses three origin pairs and measures:
+
+- cold OAG HTTP request count
+- cold end-to-end search latency
+- flights collected
+- number of common destinations
+- top-ranked destinations
+- identical-repeat cache behavior
+- additional OAG requests after cache warm-up
+
+Run one scenario first:
+
+```bash
+RUN_LIVE_OAG_EVAL=1 python -m scripts.evaluate_oag \
+  --date 2026-11-13 \
+  --max-scenarios 1 \
+  --request-budget 25
+```
+
+Then, if the first run looks reasonable, run all three:
+
+```bash
+RUN_LIVE_OAG_EVAL=1 python -m scripts.evaluate_oag \
+  --date 2026-11-13 \
+  --max-scenarios 3 \
+  --request-budget 25 \
+  --output data/oag_eval_results.json
+```
+
+The script is disabled unless `RUN_LIVE_OAG_EVAL=1` and an `OAG_API_KEY` are both set. It is intentionally direct-only and one-way to keep provider fan-out bounded.
+
 ### Latency benchmark
 
 Run a quota-safe local benchmark of the full FastAPI `POST /meetups/search` path using the mock provider:
