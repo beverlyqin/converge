@@ -30,13 +30,13 @@
       "name": "atl_sfo_evening",
       "traveler_a": {
         "origin": "ATL",
-        "depart_after": "17:00",
-        "depart_before": "23:00"
+        "depart_after": "18:00",
+        "depart_before": "21:00"
       },
       "traveler_b": {
         "origin": "SFO",
-        "depart_after": "14:00",
-        "depart_before": "20:00"
+        "depart_after": "15:00",
+        "depart_before": "18:00"
       }
     }
   ]
