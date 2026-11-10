@@ -1,12 +1,62 @@
 import os
 import time
 from datetime import datetime, timezone
+from threading import Lock
 from urllib.parse import parse_qs, urlparse
 
 import httpx
 
 from backend.app.domain.models import FlightSegment
 from backend.app.providers.base import FlightProvider
+
+
+CacheKey = tuple[str, str, str]
+
+
+class TTLFlightCache:
+    """Small process-local TTL cache for normalized OAG flight results."""
+
+    def __init__(self, ttl_seconds: float = 900.0):
+        if ttl_seconds <= 0:
+            raise ValueError("ttl_seconds must be positive")
+
+        self.ttl_seconds = ttl_seconds
+        self._entries: dict[
+            CacheKey,
+            tuple[float, list[FlightSegment]],
+        ] = {}
+        self._lock = Lock()
+
+    def get(self, key: CacheKey) -> list[FlightSegment] | None:
+        now = time.monotonic()
+
+        with self._lock:
+            entry = self._entries.get(key)
+
+            if entry is None:
+                return None
+
+            expires_at, flights = entry
+
+            if expires_at <= now:
+                del self._entries[key]
+                return None
+
+            return list(flights)
+
+    def set(
+        self,
+        key: CacheKey,
+        flights: list[FlightSegment],
+    ) -> None:
+        expires_at = time.monotonic() + self.ttl_seconds
+
+        with self._lock:
+            self._entries[key] = (
+                expires_at,
+                list(flights),
+            )
+
 
 class OAGFlightProvider(FlightProvider):
     """Retrieve Delta-operated schedules from OAG."""
@@ -17,6 +67,7 @@ class OAGFlightProvider(FlightProvider):
         self,
         api_key: str | None = None,
         max_requests: int = 25,
+        cache: TTLFlightCache | None = None,
     ):
         self.api_key = api_key or os.getenv("OAG_API_KEY")
 
@@ -25,11 +76,7 @@ class OAGFlightProvider(FlightProvider):
 
         self.max_requests = max_requests
         self.request_count = 0
-
-        self._cache: dict[
-            tuple[str, str, str],
-            list[FlightSegment],
-        ] = {}
+        self._cache = cache or TTLFlightCache()
 
     def get_flights(
         self,
@@ -45,8 +92,10 @@ class OAGFlightProvider(FlightProvider):
             depart_before.isoformat(),
         )
 
-        if cache_key in self._cache:
-            return list(self._cache[cache_key])
+        cached_flights = self._cache.get(cache_key)
+
+        if cached_flights is not None:
+            return cached_flights
 
         params = {
             "DepartureDateTime": (
@@ -159,7 +208,10 @@ class OAGFlightProvider(FlightProvider):
 
             after = after_values[0]
 
-        self._cache[cache_key] = list(flights)
+        self._cache.set(
+            cache_key,
+            flights,
+        )
 
         return flights
 
