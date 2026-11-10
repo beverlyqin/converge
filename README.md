@@ -10,7 +10,7 @@ The project combines a deterministic flight-search engine with FastAPI, Next.js,
 
 ## Demo
 
-**Frontend:** deployed on Vercel  
+**Frontend:** https://frontend-five-brown-e05gyzilwo.vercel.app/  
 **Backend:** deployed on Railway  
 **Backend API docs:** https://flightmeetup-production.up.railway.app/docs
 
@@ -416,6 +416,8 @@ https://flightmeetup-production.up.railway.app
 
 ### Frontend — Vercel
 
+Public demo: https://frontend-five-brown-e05gyzilwo.vercel.app/
+
 The frontend project uses `frontend/` as its root directory.
 
 Environment variable:
@@ -460,7 +462,7 @@ LangChain tools and MCP functions wrap stable backend functions rather than owni
 
 ## Next steps
 
-- Add the public Vercel demo URL and screenshots to this README
+- Add screenshots to this README
 - Expand the demo fixture to show more ranking tradeoffs across multiple shared destinations
 - Add CI for backend tests and frontend builds
 - Add lightweight production logging and latency monitoring
