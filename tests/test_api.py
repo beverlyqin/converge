@@ -1,3 +1,6 @@
+import json
+import logging
+
 from fastapi.testclient import TestClient
  
 from backend.app.api import app
@@ -365,3 +368,69 @@ def test_lounge_search_endpoint(monkeypatch):
         response.json()["policies"]["Centurion Lounge"][0]["chunk_id"]
         == "policy-1"
     )
+
+
+
+def test_search_meetups_emits_structured_metrics(monkeypatch, caplog):
+    class ObservableProvider(FakeFlightProvider):
+        request_count = 2
+        cache_hit_count = 1
+        cache_miss_count = 2
+
+    monkeypatch.setattr(
+        "backend.app.api.get_flight_provider",
+        lambda: ObservableProvider(),
+    )
+
+    client = TestClient(app)
+
+    with caplog.at_level(
+        logging.INFO,
+        logger="flight_meetup.search",
+    ):
+        response = client.post(
+            "/meetups/search",
+            json={
+                "traveler_a": {
+                    "origin": "JFK",
+                    "depart_after": "2026-11-13T17:00:00-05:00",
+                    "depart_before": "2026-11-13T23:59:00-05:00",
+                },
+                "traveler_b": {
+                    "origin": "SEA",
+                    "depart_after": "2026-11-13T14:00:00-08:00",
+                    "depart_before": "2026-11-13T20:00:00-08:00",
+                },
+                "constraints": {
+                    "max_stops": 0,
+                    "max_arrival_gap_minutes": 60,
+                },
+                "weights": {
+                    "arrival_sync": 0.5,
+                    "stops": 0.2,
+                    "travel_time": 0.3,
+                    "backup_options": 0.0,
+                },
+            },
+        )
+
+    assert response.status_code == 200
+
+    record = next(
+        record
+        for record in caplog.records
+        if record.name == "flight_meetup.search"
+    )
+    payload = json.loads(record.message)
+
+    assert payload["event"] == "meetup_search_completed"
+    assert payload["provider"] == "ObservableProvider"
+    assert payload["origin_a"] == "JFK"
+    assert payload["origin_b"] == "SEA"
+    assert payload["provider_requests"] == 2
+    assert payload["cache_hits"] == 1
+    assert payload["cache_misses"] == 2
+    assert payload["flights_retrieved"] == 2
+    assert payload["candidate_destinations"] == 1
+    assert payload["final_results"] == 1
+    assert payload["latency_ms"] >= 0
