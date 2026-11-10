@@ -40,7 +40,7 @@ class FakeFlightProvider:
 def test_search_meetups_endpoint(monkeypatch):
     monkeypatch.setattr(
         "backend.app.api.OAGFlightProvider",
-        lambda: FakeFlightProvider(),
+        lambda **kwargs: FakeFlightProvider(),
     )
 
     client = TestClient(app)
@@ -220,7 +220,7 @@ def test_search_meetups_returns_round_trip_itineraries(monkeypatch):
 
     monkeypatch.setattr(
         "backend.app.api.OAGFlightProvider",
-        lambda: RoundTripProvider(),
+        lambda **kwargs: RoundTripProvider(),
     )
 
     client = TestClient(app)
@@ -267,7 +267,7 @@ def test_search_meetups_returns_round_trip_itineraries(monkeypatch):
 def test_round_trip_without_returns_does_not_fall_back_to_outbound(monkeypatch):
     monkeypatch.setattr(
         "backend.app.api.OAGFlightProvider",
-        lambda: FakeFlightProvider(),
+        lambda **kwargs: FakeFlightProvider(),
     )
 
     client = TestClient(app)
