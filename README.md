@@ -569,7 +569,7 @@ LangChain tools and MCP functions wrap stable backend functions rather than owni
 
 ## Why this project
 
-The interesting part is not simply calling a flight API or adding an LLM. Flight Meetup separates concerns deliberately:
+Flight Meetup separates concerns deliberately:
 
 - deterministic algorithms decide what is feasible,
 - ranking decides what is convenient,
@@ -578,4 +578,4 @@ The interesting part is not simply calling a flight API or adding an LLM. Flight
 - MCP makes the same capabilities reusable by external AI clients,
 - the web app turns those layers into a usable product.
 
-That separation is the core engineering story of the project.
+That separation is the core engineering of the project.
