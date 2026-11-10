@@ -9,7 +9,7 @@ from backend.app.domain.models import (
     TravelerRequest,
 )
 from backend.app.providers.mock import MockFlightProvider
-from backend.app.providers.oag import OAGFlightProvider
+from backend.app.providers.oag import OAGFlightProvider, TTLFlightCache
 from backend.app.ranking.scoring import RankingWeights
 from backend.app.search import search_ranked_meetups_with_returns
 from backend.app.ranking.explanations import (
@@ -21,6 +21,12 @@ from backend.app.airports.timezones import get_airport_timezone
 from backend.app.routing.reachability import get_return_flights
 
 app = FastAPI()
+
+_oag_flight_cache = TTLFlightCache(
+    ttl_seconds=float(
+        os.getenv("OAG_CACHE_TTL_SECONDS", "900")
+    )
+)
 
 
 class MeetupSearchRequest(BaseModel):
@@ -107,7 +113,9 @@ def get_flight_provider():
     if os.getenv("FLIGHT_PROVIDER") == "mock":
         return MockFlightProvider()
 
-    return OAGFlightProvider()
+    return OAGFlightProvider(
+        cache=_oag_flight_cache,
+    )
 
 def localize_traveler_request(
     traveler: TravelerRequest,
