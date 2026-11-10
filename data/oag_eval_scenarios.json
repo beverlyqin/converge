@@ -1,0 +1,43 @@
+{
+  "scenarios": [
+    {
+      "name": "jfk_sea_evening",
+      "traveler_a": {
+        "origin": "JFK",
+        "depart_after": "17:00",
+        "depart_before": "23:59"
+      },
+      "traveler_b": {
+        "origin": "SEA",
+        "depart_after": "14:00",
+        "depart_before": "20:00"
+      }
+    },
+    {
+      "name": "bos_lax_evening",
+      "traveler_a": {
+        "origin": "BOS",
+        "depart_after": "17:00",
+        "depart_before": "23:00"
+      },
+      "traveler_b": {
+        "origin": "LAX",
+        "depart_after": "14:00",
+        "depart_before": "20:00"
+      }
+    },
+    {
+      "name": "atl_sfo_evening",
+      "traveler_a": {
+        "origin": "ATL",
+        "depart_after": "17:00",
+        "depart_before": "23:00"
+      },
+      "traveler_b": {
+        "origin": "SFO",
+        "depart_after": "14:00",
+        "depart_before": "20:00"
+      }
+    }
+  ]
+}
