@@ -42,7 +42,7 @@ For **Amex Platinum**, the AUS result can also surface the Delta Sky Club locati
 - Multi-origin destination search instead of single-origin flight search
 - Direct and bounded one-stop itinerary construction
 - Timezone-aware outbound and return-window handling
-- Explainable ranking across arrival synchronization, stops, travel time, fairness, and backup options
+- Explainable ranking across arrival synchronization, stops, travel time, and backup options
 - User-tunable ranking preferences
 - Round-trip feasibility with actual return itineraries
 - Provider abstraction for local mock data and live OAG schedules
@@ -51,7 +51,7 @@ For **Amex Platinum**, the AUS result can also surface the Delta Sky Club locati
 - LangChain tool wrappers and Gemini multi-step tool calling
 - MCP exposure of the same backend capabilities
 - Next.js frontend with FastAPI backend
-- Automated backend tests plus frontend production builds
+- Automated backend tests, frontend production builds, and Docker image builds in GitHub Actions
 - Production deployment with Vercel + Railway
 
 ## Architecture
@@ -109,7 +109,7 @@ The OAG provider is isolated behind a `FlightProvider` interface, so routing and
 
 Live-provider safeguards include:
 
-- Exact-query in-memory caching
+- Process-local TTL caching shared across API requests
 - Configurable request budgets
 - Bounded retries
 - 429 / `Retry-After` handling
@@ -220,6 +220,7 @@ backend/
     routing/        # itinerary construction / reachability
     tools/          # LangChain tool wrappers
     api.py          # FastAPI endpoints
+    observability.py # structured search telemetry
     mcp_server.py   # MCP adapter
 
 frontend/
@@ -238,6 +239,9 @@ scripts/
   retrieve_hybrid.py
   evaluate_retrieval.py
   evaluate_product_retrieval.py
+  evaluate_ranking.py
+  evaluate_oag.py
+  benchmark_latency.py
   demo_tool_calling.py
   search_real_meetup.py
 
@@ -257,7 +261,7 @@ Run:
 python -m scripts.evaluate_ranking
 ```
 
-The current 12-scenario suite is designed to verify that changing ranking weights changes the preferred destination in the expected direction. Treat this as a deterministic product-behavior evaluation set, not a real-world user-preference benchmark.
+The current 12-scenario suite verifies that changing ranking weights changes the preferred destination in the expected direction. The current evaluation passes **12/12 expected outcomes (100%)**. Treat this as a deterministic product-behavior evaluation set, not a real-world user-preference benchmark.
 
 ### Controlled live OAG evaluation
 
@@ -294,6 +298,15 @@ RUN_LIVE_OAG_EVAL=1 python -m scripts.evaluate_oag \
 
 The script is disabled unless `RUN_LIVE_OAG_EVAL=1` and an `OAG_API_KEY` are both set. It is intentionally direct-only and one-way to keep provider fan-out bounded.
 
+In the current controlled three-scenario evaluation:
+
+- **3/3** origin-pair scenarios produced at least one feasible common destination
+- **396** live flight records were processed
+- **55** cold OAG HTTP requests were used across the three scenarios
+- identical repeated searches required **0 additional OAG calls** after warm-up in all three scenarios
+
+These results are a small engineering evaluation, not a broad production benchmark. The OAG cache is process-local: it persists across API requests handled by the same backend process, but resets on restart and is not shared across multiple instances.
+
 ### Latency benchmark
 
 Run a quota-safe local benchmark of the full FastAPI `POST /meetups/search` path using the mock provider:
@@ -303,6 +316,8 @@ python -m scripts.benchmark_latency
 ```
 
 The script reports mean, median, p95, minimum, and maximum latency.
+
+On a 100-request localhost HTTP benchmark using the mock provider, the current search path measured approximately **0.62 ms median** and **0.74 ms p95**. This is a local deterministic-path benchmark and does not include OAG network or pagination latency.
 
 To measure a deployed backend instead:
 
@@ -546,10 +561,9 @@ LangChain tools and MCP functions wrap stable backend functions rather than owni
 
 ## Next steps
 
-- Add screenshots to this README
+- Reduce cold live-provider latency by cutting unnecessary pagination and parallelizing independent provider requests where appropriate
 - Expand the demo fixture to show more ranking tradeoffs across multiple shared destinations
-- Add CI for backend tests and frontend builds
-- Add lightweight production logging and latency monitoring
+- Consider a distributed cache if the backend scales beyond a single process
 - Expand lounge/card coverage selectively
 - Record a short portfolio demo
 
