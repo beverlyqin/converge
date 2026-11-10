@@ -245,6 +245,53 @@ tests/
   # deterministic unit/integration tests
 ```
 
+## Engineering evaluation and benchmarking
+
+### Ranking evaluation
+
+The repository includes a curated ranking-evaluation suite covering individual objectives and deliberate tradeoffs between arrival synchronization, stops, travel time, and backup flexibility.
+
+Run:
+
+```bash
+python -m scripts.evaluate_ranking
+```
+
+The current 12-scenario suite is designed to verify that changing ranking weights changes the preferred destination in the expected direction. Treat this as a deterministic product-behavior evaluation set, not a real-world user-preference benchmark.
+
+### Latency benchmark
+
+Run a quota-safe local benchmark of the full FastAPI `POST /meetups/search` path using the mock provider:
+
+```bash
+python -m scripts.benchmark_latency
+```
+
+The script reports mean, median, p95, minimum, and maximum latency.
+
+To measure a deployed backend instead:
+
+```bash
+python -m scripts.benchmark_latency --url https://YOUR-BACKEND
+```
+
+Do not point repeated remote benchmarks at a live OAG-backed deployment unless you intentionally want to consume provider quota.
+
+### Docker
+
+Build and run the FastAPI backend locally:
+
+```bash
+docker build -t flight-meetup .
+docker run --rm -p 8000:8000 -e FLIGHT_PROVIDER=mock flight-meetup
+```
+
+Then open:
+
+```text
+http://localhost:8000/docs
+```
+
 ## Local development
 
 ### 1. Clone the repository

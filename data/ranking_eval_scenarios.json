@@ -1,0 +1,335 @@
+{
+  "scenarios": [
+    {
+      "name": "arrival_sync_priority",
+      "description": "Arrival-sync weighting should prefer the destination with the smaller arrival gap.",
+      "weights": {
+        "arrival_sync": 1,
+        "stops": 0,
+        "travel_time": 0,
+        "backup_options": 0
+      },
+      "expected_destination": "AUS",
+      "candidates": [
+        {
+          "destination": "AUS",
+          "arrival_gap_minutes": 15,
+          "total_travel_time_minutes": 500,
+          "total_stops": 0,
+          "backup_layers": 0
+        },
+        {
+          "destination": "DEN",
+          "arrival_gap_minutes": 70,
+          "total_travel_time_minutes": 420,
+          "total_stops": 0,
+          "backup_layers": 0
+        }
+      ]
+    },
+    {
+      "name": "travel_time_priority",
+      "description": "Travel-time weighting should prefer the destination with the shorter combined trip time.",
+      "weights": {
+        "arrival_sync": 0,
+        "stops": 0,
+        "travel_time": 1,
+        "backup_options": 0
+      },
+      "expected_destination": "DEN",
+      "candidates": [
+        {
+          "destination": "AUS",
+          "arrival_gap_minutes": 15,
+          "total_travel_time_minutes": 500,
+          "total_stops": 0,
+          "backup_layers": 0
+        },
+        {
+          "destination": "DEN",
+          "arrival_gap_minutes": 70,
+          "total_travel_time_minutes": 420,
+          "total_stops": 0,
+          "backup_layers": 0
+        }
+      ]
+    },
+    {
+      "name": "stops_priority",
+      "description": "Stop weighting should prefer two nonstop itineraries over a one-stop alternative.",
+      "weights": {
+        "arrival_sync": 0,
+        "stops": 1,
+        "travel_time": 0,
+        "backup_options": 0
+      },
+      "expected_destination": "MIA",
+      "candidates": [
+        {
+          "destination": "MIA",
+          "arrival_gap_minutes": 45,
+          "total_travel_time_minutes": 560,
+          "total_stops": 0,
+          "backup_layers": 0
+        },
+        {
+          "destination": "ATL",
+          "arrival_gap_minutes": 10,
+          "total_travel_time_minutes": 500,
+          "total_stops": 1,
+          "backup_layers": 0
+        }
+      ]
+    },
+    {
+      "name": "backup_priority",
+      "description": "Backup weighting should reward a destination with additional itinerary layers.",
+      "weights": {
+        "arrival_sync": 0,
+        "stops": 0,
+        "travel_time": 0,
+        "backup_options": 1
+      },
+      "expected_destination": "AUS",
+      "candidates": [
+        {
+          "destination": "AUS",
+          "arrival_gap_minutes": 30,
+          "total_travel_time_minutes": 480,
+          "total_stops": 0,
+          "backup_layers": 2
+        },
+        {
+          "destination": "DEN",
+          "arrival_gap_minutes": 30,
+          "total_travel_time_minutes": 480,
+          "total_stops": 0,
+          "backup_layers": 0
+        }
+      ]
+    },
+    {
+      "name": "arrival_vs_speed_arrival_heavy",
+      "description": "With synchronized arrival weighted more heavily, the closer arrival should beat the faster destination.",
+      "weights": {
+        "arrival_sync": 0.8,
+        "stops": 0,
+        "travel_time": 0.2,
+        "backup_options": 0
+      },
+      "expected_destination": "AUS",
+      "candidates": [
+        {
+          "destination": "AUS",
+          "arrival_gap_minutes": 10,
+          "total_travel_time_minutes": 540,
+          "total_stops": 0,
+          "backup_layers": 0
+        },
+        {
+          "destination": "DEN",
+          "arrival_gap_minutes": 80,
+          "total_travel_time_minutes": 420,
+          "total_stops": 0,
+          "backup_layers": 0
+        }
+      ]
+    },
+    {
+      "name": "arrival_vs_speed_speed_heavy",
+      "description": "Changing the same tradeoff toward travel time should flip the preferred destination.",
+      "weights": {
+        "arrival_sync": 0.2,
+        "stops": 0,
+        "travel_time": 0.8,
+        "backup_options": 0
+      },
+      "expected_destination": "DEN",
+      "candidates": [
+        {
+          "destination": "AUS",
+          "arrival_gap_minutes": 10,
+          "total_travel_time_minutes": 540,
+          "total_stops": 0,
+          "backup_layers": 0
+        },
+        {
+          "destination": "DEN",
+          "arrival_gap_minutes": 80,
+          "total_travel_time_minutes": 420,
+          "total_stops": 0,
+          "backup_layers": 0
+        }
+      ]
+    },
+    {
+      "name": "stops_vs_arrival_stops_heavy",
+      "description": "A nonstop option should win when fewer stops dominate a small arrival-sync advantage.",
+      "weights": {
+        "arrival_sync": 0.2,
+        "stops": 0.8,
+        "travel_time": 0,
+        "backup_options": 0
+      },
+      "expected_destination": "LAX",
+      "candidates": [
+        {
+          "destination": "LAX",
+          "arrival_gap_minutes": 55,
+          "total_travel_time_minutes": 560,
+          "total_stops": 0,
+          "backup_layers": 0
+        },
+        {
+          "destination": "SLC",
+          "arrival_gap_minutes": 5,
+          "total_travel_time_minutes": 560,
+          "total_stops": 2,
+          "backup_layers": 0
+        }
+      ]
+    },
+    {
+      "name": "stops_vs_arrival_arrival_heavy",
+      "description": "The same candidate set should flip when arrival synchronization dominates.",
+      "weights": {
+        "arrival_sync": 0.8,
+        "stops": 0.2,
+        "travel_time": 0,
+        "backup_options": 0
+      },
+      "expected_destination": "SLC",
+      "candidates": [
+        {
+          "destination": "LAX",
+          "arrival_gap_minutes": 55,
+          "total_travel_time_minutes": 560,
+          "total_stops": 0,
+          "backup_layers": 0
+        },
+        {
+          "destination": "SLC",
+          "arrival_gap_minutes": 5,
+          "total_travel_time_minutes": 560,
+          "total_stops": 2,
+          "backup_layers": 0
+        }
+      ]
+    },
+    {
+      "name": "backup_vs_speed_backup_heavy",
+      "description": "Extra fallback itineraries should overcome a moderate travel-time disadvantage when backup weight is high.",
+      "weights": {
+        "arrival_sync": 0,
+        "stops": 0,
+        "travel_time": 0.25,
+        "backup_options": 0.75
+      },
+      "expected_destination": "ATL",
+      "candidates": [
+        {
+          "destination": "ATL",
+          "arrival_gap_minutes": 30,
+          "total_travel_time_minutes": 520,
+          "total_stops": 0,
+          "backup_layers": 2
+        },
+        {
+          "destination": "BNA",
+          "arrival_gap_minutes": 30,
+          "total_travel_time_minutes": 440,
+          "total_stops": 0,
+          "backup_layers": 0
+        }
+      ]
+    },
+    {
+      "name": "backup_vs_speed_speed_heavy",
+      "description": "The same candidate set should favor the shorter trip when travel time dominates.",
+      "weights": {
+        "arrival_sync": 0,
+        "stops": 0,
+        "travel_time": 0.8,
+        "backup_options": 0.2
+      },
+      "expected_destination": "BNA",
+      "candidates": [
+        {
+          "destination": "ATL",
+          "arrival_gap_minutes": 30,
+          "total_travel_time_minutes": 520,
+          "total_stops": 0,
+          "backup_layers": 2
+        },
+        {
+          "destination": "BNA",
+          "arrival_gap_minutes": 30,
+          "total_travel_time_minutes": 440,
+          "total_stops": 0,
+          "backup_layers": 0
+        }
+      ]
+    },
+    {
+      "name": "balanced_dominant_candidate",
+      "description": "A candidate that is better on arrival gap, stops, and travel time should rank first under balanced weights.",
+      "weights": {
+        "arrival_sync": 0.4,
+        "stops": 0.3,
+        "travel_time": 0.3,
+        "backup_options": 0
+      },
+      "expected_destination": "MSP",
+      "candidates": [
+        {
+          "destination": "MSP",
+          "arrival_gap_minutes": 20,
+          "total_travel_time_minutes": 430,
+          "total_stops": 0,
+          "backup_layers": 0
+        },
+        {
+          "destination": "ORD",
+          "arrival_gap_minutes": 65,
+          "total_travel_time_minutes": 500,
+          "total_stops": 1,
+          "backup_layers": 0
+        },
+        {
+          "destination": "DFW",
+          "arrival_gap_minutes": 90,
+          "total_travel_time_minutes": 560,
+          "total_stops": 2,
+          "backup_layers": 0
+        }
+      ]
+    },
+    {
+      "name": "backup_breaks_quality_tie",
+      "description": "When primary itinerary quality is tied, backup flexibility should break the tie.",
+      "weights": {
+        "arrival_sync": 0.4,
+        "stops": 0.2,
+        "travel_time": 0.2,
+        "backup_options": 0.2
+      },
+      "expected_destination": "SEA",
+      "candidates": [
+        {
+          "destination": "SEA",
+          "arrival_gap_minutes": 25,
+          "total_travel_time_minutes": 460,
+          "total_stops": 0,
+          "backup_layers": 1
+        },
+        {
+          "destination": "PDX",
+          "arrival_gap_minutes": 25,
+          "total_travel_time_minutes": 460,
+          "total_stops": 0,
+          "backup_layers": 0
+        }
+      ]
+    }
+  ]
+}
