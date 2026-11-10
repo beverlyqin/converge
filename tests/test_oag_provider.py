@@ -1,7 +1,11 @@
 import pytest
 from datetime import datetime, timezone
 
-from backend.app.providers.oag import OAGFlightProvider, parse_oag_flight
+from backend.app.providers.oag import (
+    OAGFlightProvider,
+    TTLFlightCache,
+    parse_oag_flight,
+)
 
 
 def test_parse_oag_flight():
@@ -264,3 +268,124 @@ def test_oag_provider_enforces_request_budget(monkeypatch):
         )
 
     assert provider.request_count == 1
+
+
+def test_oag_provider_shares_cache_across_instances(monkeypatch):
+    call_count = 0
+
+    class FakeResponse:
+        status_code = 200
+        headers = {}
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {
+                "data": [
+                    {
+                        "carrier": {"iata": "DL"},
+                        "flightNumber": "123",
+                        "departure": {
+                            "airport": {"iata": "JFK"},
+                            "date": {"utc": "2026-11-13"},
+                            "time": {"utc": "22:30:00"},
+                        },
+                        "arrival": {
+                            "airport": {"iata": "AUS"},
+                            "date": {"utc": "2026-11-14"},
+                            "time": {"utc": "01:35:00"},
+                        },
+                        "segmentInfo": {"numberOfStops": 0},
+                    }
+                ],
+                "paging": {},
+            }
+
+    def fake_get(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        return FakeResponse()
+
+    monkeypatch.setattr(
+        "backend.app.providers.oag.httpx.get",
+        fake_get,
+    )
+
+    cache = TTLFlightCache(ttl_seconds=60)
+
+    first_provider = OAGFlightProvider(
+        api_key="fake-key",
+        cache=cache,
+    )
+    second_provider = OAGFlightProvider(
+        api_key="fake-key",
+        cache=cache,
+    )
+
+    depart_after = datetime(
+        2026, 11, 13, 17, 0,
+        tzinfo=timezone.utc,
+    )
+    depart_before = datetime(
+        2026, 11, 13, 23, 59,
+        tzinfo=timezone.utc,
+    )
+
+    first = first_provider.get_flights(
+        origin="JFK",
+        depart_after=depart_after,
+        depart_before=depart_before,
+    )
+    second = second_provider.get_flights(
+        origin="JFK",
+        depart_after=depart_after,
+        depart_before=depart_before,
+    )
+
+    assert first == second
+    assert call_count == 1
+    assert first_provider.request_count == 1
+    assert second_provider.request_count == 0
+
+
+def test_ttl_flight_cache_expires(monkeypatch):
+    current_time = 1000.0
+
+    monkeypatch.setattr(
+        "backend.app.providers.oag.time.monotonic",
+        lambda: current_time,
+    )
+
+    cache = TTLFlightCache(ttl_seconds=10)
+
+    flight = parse_oag_flight(
+        {
+            "carrier": {"iata": "DL"},
+            "flightNumber": "123",
+            "departure": {
+                "airport": {"iata": "JFK"},
+                "date": {"utc": "2026-11-13"},
+                "time": {"utc": "22:30:00"},
+            },
+            "arrival": {
+                "airport": {"iata": "AUS"},
+                "date": {"utc": "2026-11-14"},
+                "time": {"utc": "01:35:00"},
+            },
+        }
+    )
+
+    key = (
+        "JFK",
+        "2026-11-13T17:00:00+00:00",
+        "2026-11-13T23:59:00+00:00",
+    )
+
+    cache.set(key, [flight])
+
+    assert cache.get(key) == [flight]
+
+    current_time = 1011.0
+
+    assert cache.get(key) is None
