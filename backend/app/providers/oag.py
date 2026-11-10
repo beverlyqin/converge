@@ -76,6 +76,8 @@ class OAGFlightProvider(FlightProvider):
 
         self.max_requests = max_requests
         self.request_count = 0
+        self.cache_hit_count = 0
+        self.cache_miss_count = 0
         self._cache = cache or TTLFlightCache()
 
     def get_flights(
@@ -95,7 +97,10 @@ class OAGFlightProvider(FlightProvider):
         cached_flights = self._cache.get(cache_key)
 
         if cached_flights is not None:
+            self.cache_hit_count += 1
             return cached_flights
+
+        self.cache_miss_count += 1
 
         params = {
             "DepartureDateTime": (
