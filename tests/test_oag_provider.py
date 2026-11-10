@@ -218,6 +218,8 @@ def test_oag_provider_caches_identical_queries(monkeypatch):
     assert first == second
     assert call_count == 1
     assert provider.request_count == 1
+    assert provider.cache_miss_count == 1
+    assert provider.cache_hit_count == 1
 
 def test_oag_provider_enforces_request_budget(monkeypatch):
     class FakeResponse:
@@ -347,6 +349,10 @@ def test_oag_provider_shares_cache_across_instances(monkeypatch):
     assert call_count == 1
     assert first_provider.request_count == 1
     assert second_provider.request_count == 0
+    assert first_provider.cache_miss_count == 1
+    assert first_provider.cache_hit_count == 0
+    assert second_provider.cache_miss_count == 0
+    assert second_provider.cache_hit_count == 1
 
 
 def test_ttl_flight_cache_expires(monkeypatch):
