@@ -201,6 +201,10 @@ def main():
         default=DEFAULT_SCENARIOS,
     )
     parser.add_argument(
+        "--scenario",
+        help="Run only the named scenario instead of the first N scenarios.",
+    )
+    parser.add_argument(
         "--max-scenarios",
         type=int,
         default=3,
@@ -239,7 +243,16 @@ def main():
         args.scenarios.read_text(encoding="utf-8")
     )
 
-    selected = payload["scenarios"][: args.max_scenarios]
+    if args.scenario:
+        selected = [
+            scenario
+            for scenario in payload["scenarios"]
+            if scenario["name"] == args.scenario
+        ]
+        if not selected:
+            parser.error(f"Unknown scenario: {args.scenario}")
+    else:
+        selected = payload["scenarios"][: args.max_scenarios]
 
     print(
         f"Running {len(selected)} live OAG scenario(s) for "
@@ -249,13 +262,25 @@ def main():
 
     results = []
 
+    failures = []
+
     for config in selected:
         print(f"\nRunning {config['name']}...")
-        result = evaluate_scenario(
-            config,
-            travel_date,
-            args.request_budget,
-        )
+        try:
+            result = evaluate_scenario(
+                config,
+                travel_date,
+                args.request_budget,
+            )
+        except RuntimeError as exc:
+            failure = {
+                "name": config["name"],
+                "error": str(exc),
+            }
+            failures.append(failure)
+            print(f"  FAILED: {exc}")
+            continue
+
         results.append(result)
 
         print(
@@ -310,18 +335,23 @@ def main():
 
     summary = {
         "travel_date": travel_date.isoformat(),
-        "scenario_count": len(results),
+        "scenario_count_requested": len(selected),
+        "scenario_count_completed": len(results),
+        "scenario_count_failed": len(failures),
         "scenarios_with_common_destinations": scenarios_with_results,
         "total_cold_oag_http_requests": total_cold_requests,
         "total_warm_additional_oag_http_requests": total_warm_requests,
         "results": results,
+        "failures": failures,
     }
 
     print("\n" + "=" * 72)
     print(
-        f"Coverage: {scenarios_with_results}/{len(results)} "
+        f"Coverage: {scenarios_with_results}/{len(results)} completed "
         "scenarios produced at least one common destination"
     )
+    if failures:
+        print(f"Failed scenarios: {len(failures)}")
     print(
         f"Total cold OAG HTTP requests: {total_cold_requests}"
     )
