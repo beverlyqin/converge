@@ -14,6 +14,8 @@ The project combines a deterministic flight-search engine with FastAPI, Next.js,
 **Backend:** deployed on Railway  
 **Backend API docs:** https://flightmeetup-production.up.railway.app/docs
 
+![Flight Meetup search and ranked destination result](docs/flight-meetup-demo.png)
+
 > The public deployment currently uses the local mock flight provider so visitors cannot exhaust the project's limited OAG API quota. The same backend also supports live OAG schedule retrieval when `FLIGHT_PROVIDER` is switched from `mock` and an `OAG_API_KEY` is configured.
 
 ### Demo scenario
