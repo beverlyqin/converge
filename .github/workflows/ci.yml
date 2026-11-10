@@ -48,3 +48,14 @@ jobs:
 
       - name: Build frontend
         run: npm run build
+
+
+  docker-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build backend Docker image
+        run: docker build -t flight-meetup-ci .
