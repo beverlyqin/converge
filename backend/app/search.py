@@ -3,6 +3,7 @@ from backend.app.domain.models import (
     TravelerRequest,
 )
 from backend.app.providers.base import FlightProvider
+from backend.app.observability import SearchTelemetry
 from backend.app.providers.schedules import (
     collect_return_schedules,
     collect_traveler_schedules,
@@ -21,6 +22,7 @@ def search_meetup_itineraries_with_returns(
     traveler_a: TravelerRequest,
     traveler_b: TravelerRequest,
     constraints: SearchConstraints,
+    telemetry: SearchTelemetry | None = None,
 ):
     """Find meetup pairs and retain fetched return schedules for reuse."""
 
@@ -38,6 +40,9 @@ def search_meetup_itineraries_with_returns(
 
     outbound_flights = flights_a + flights_b
 
+    if telemetry is not None:
+        telemetry.flights_retrieved += len(outbound_flights)
+
     outbound_pairs = search_outbound_meeting_itineraries(
         outbound_flights,
         traveler_a,
@@ -46,12 +51,18 @@ def search_meetup_itineraries_with_returns(
     )
 
     if not outbound_pairs:
+        if telemetry is not None:
+            telemetry.candidate_destinations = 0
+            telemetry.final_results = 0
         return [], [], []
 
     candidate_destinations = {
         itinerary_a.destination
         for itinerary_a, _ in outbound_pairs
     }
+
+    if telemetry is not None:
+        telemetry.candidate_destinations = len(candidate_destinations)
 
     return_flights_a = collect_return_schedules(
         provider,
@@ -70,6 +81,12 @@ def search_meetup_itineraries_with_returns(
         + return_flights_a
         + return_flights_b
     )
+
+    if telemetry is not None:
+        telemetry.flights_retrieved += (
+            len(return_flights_a)
+            + len(return_flights_b)
+        )
 
     pairs = search_meeting_itineraries(
         all_flights,
@@ -104,6 +121,7 @@ def search_ranked_meetups_with_returns(
     traveler_b: TravelerRequest,
     constraints: SearchConstraints,
     weights: RankingWeights,
+    telemetry: SearchTelemetry | None = None,
 ):
     """Rank meetup destinations and retain return schedules for the API."""
 
@@ -113,14 +131,20 @@ def search_ranked_meetups_with_returns(
             traveler_a,
             traveler_b,
             constraints,
+            telemetry,
         )
     )
 
+    ranked = rank_destinations(
+        pairs,
+        weights,
+    )
+
+    if telemetry is not None:
+        telemetry.final_results = len(ranked)
+
     return (
-        rank_destinations(
-            pairs,
-            weights,
-        ),
+        ranked,
         return_flights_a,
         return_flights_b,
     )
