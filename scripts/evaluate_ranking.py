@@ -172,6 +172,10 @@ def main():
 
     if args.json:
         print(json.dumps(summary, indent=2))
+
+        if passed != total:
+            raise SystemExit(1)
+
         return
 
     print("Ranking evaluation")
@@ -186,7 +190,8 @@ def main():
 
     print("-" * 72)
     print(f"Result: {passed}/{total} expected outcomes ({accuracy:.1%})")
-
+    if passed != total:
+        raise SystemExit(1)
 
 if __name__ == "__main__":
     main()

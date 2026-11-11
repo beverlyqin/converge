@@ -59,3 +59,24 @@ jobs:
 
       - name: Build backend Docker image
         run: docker build -t flight-meetup-ci .
+
+    evaluation-tests:
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Set up Python
+          uses: actions/setup-python@v5
+          with:
+            python-version: "3.13"
+
+        - name: Install evaluation dependencies
+          run: pip install -r requirements-dev.txt
+
+        - name: Run deterministic agent evaluation tests
+          run: python -m pytest tests/test_agent_eval.py tests/test_task_completion_eval.py
+
+        - name: Run deterministic ranking evaluation
+          run: python -m scripts.evaluate_ranking
