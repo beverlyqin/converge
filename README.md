@@ -51,6 +51,7 @@ For **Amex Platinum**, the AUS result can also surface the Delta Sky Club locati
 - LangChain tool wrappers and Gemini multi-step tool calling
 - MCP exposure of the same backend capabilities
 - Next.js frontend with FastAPI backend
+- DeepEval agent tool/argument correctness and task-completion evaluation with deterministic evaluation checks in CI
 - Automated backend tests, frontend production builds, and Docker image builds in GitHub Actions
 - Production deployment with Vercel + Railway
 
@@ -239,6 +240,8 @@ scripts/
   retrieve_hybrid.py
   evaluate_retrieval.py
   evaluate_product_retrieval.py
+  evaluate_agent_live.py
+  evaluate_task_completion.py
   evaluate_ranking.py
   evaluate_oag.py
   benchmark_latency.py
@@ -250,6 +253,35 @@ tests/
 ```
 
 ## Engineering evaluation and benchmarking
+
+### Agent evaluation (DeepEval)
+
+The Gemini tool-calling agent is evaluated separately from the deterministic flight-search and ranking engine. The evaluation uses DeepEval and curated inputs so agent behavior can be measured without consuming live OAG flight-provider quota.
+
+**Tool selection and argument correctness:** `data/agent_eval_cases.json` contains 7 scenarios covering flight search, lounge lookup, lounge access policies, combined requests, paraphrased constraints, and missing required information. `scripts/evaluate_agent_live.py` repeats each scenario 3 times against Gemini, records the tool-call trace, and checks both DeepEval tool correctness and domain-specific argument correctness. The argument comparator accepts equivalent traveler A/B ordering while preserving each airport's departure windows and search constraints.
+
+In the latest recorded live evaluation (PR #28), **21/21 tool selections** and **21/21 argument checks** passed across 7 scenarios × 3 runs. These are development-set results, not production reliability benchmarks.
+
+**Task completion:** `data/task_completion_eval_cases.json` contains 4 scenarios (flight search, lounge lookup, combined flight + lounge lookup, and lounge policy lookup). `scripts/evaluate_task_completion.py` traces the real Gemini agent and tool invocations and uses DeepEval's `TaskCompletionMetric` with a Gemini judge (threshold: 0.7). Task-completion scores can vary between runs; no aggregate pass rate is claimed here.
+
+To run evaluations locally, install the development dependencies and configure a Gemini API key:
+
+```bash
+pip install -r requirements-dev.txt
+export GOOGLE_API_KEY="your-key"
+
+# Live Gemini tool + argument evaluation (mock-backed flight tools)
+python -m scripts.evaluate_agent_live
+
+# Live Gemini task-completion evaluation (Gemini judge, sequential runs)
+python -m scripts.evaluate_task_completion
+
+# Deterministic evaluation checks (no live LLM calls)
+python -m pytest tests/test_agent_eval.py tests/test_task_completion_eval.py
+python -m scripts.evaluate_ranking
+```
+
+GitHub Actions runs the deterministic agent-evaluation tests and ranking scenarios in a dedicated `evaluation-tests` job. Live Gemini evaluations and live OAG evaluations are deliberately excluded from CI due to nondeterminism, API-key requirements, latency, and rate limits.
 
 ### Ranking evaluation
 
@@ -393,9 +425,10 @@ The frontend's Next.js API routes proxy requests to the FastAPI backend.
 
 ### 4. Run tests
 
-From the repository root:
+From the repository root, install the development dependencies (including DeepEval) before running the full test suite:
 
 ```bash
+pip install -r requirements-dev.txt
 python -m pytest
 ```
 

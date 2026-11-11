@@ -74,19 +74,6 @@ def hyperparameters():
         "evaluation_dispatch": "sequential",
     }
 
-@deepeval.log_hyperparameters
-def hyperparameters():
-    return {
-        "agent_model": "gemini-3.5-flash-lite",
-        "judge_model": os.getenv(
-            "DEEPEVAL_JUDGE_MODEL",
-            "gemini-3.5-flash-lite",
-        ),
-        "task_completion_threshold": 0.7,
-        "judge_async_mode": False,
-        "evaluation_dispatch": "sequential",
-    }
-
 def load_task_completion_cases():
     project_root = Path(__file__).resolve().parents[1]
 
