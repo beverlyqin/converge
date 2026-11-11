@@ -1,0 +1,22 @@
+[
+    {
+      "id": "flight_search",
+      "category": "flight_search",
+      "input": "Find a meetup destination for two travelers on November 13, 2026. Traveler A is leaving JFK between 5:00 PM and midnight. Traveler B is leaving SEA between 2:00 PM and 8:00 PM. Allow at most one stop and no more than a 2 hour arrival gap."
+    },
+    {
+      "id": "lounge_lookup",
+      "category": "lounge_lookup",
+      "input": "I have an Amex Platinum card. What lounges can I find at JFK? Just tell me which lounges are available; I don't need detailed access policy rules."
+    },
+    {
+      "id": "flight_and_lounge",
+      "category": "mixed",
+      "input": "Find a meetup destination for two travelers on November 13, 2026. Traveler A is leaving JFK between 5:00 PM and midnight. Traveler B is leaving SEA between 2:00 PM and 8:00 PM. Allow at most one stop and no more than a 2 hour arrival gap. I also have an Amex Platinum card and want to know what lounges are available at JFK."
+    },
+    {
+        "id": "lounge_policy",
+        "category": "lounge_policy",
+        "input": "What is the access policy for the Centurion Lounge with an Amex Platinum card?"
+    }
+]
