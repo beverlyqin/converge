@@ -1,0 +1,123 @@
+[
+    {
+      "id": "flight_search_jfk_sea_constraints",
+      "category": "flight_search",
+      "input": "Find a meetup destination for two travelers on November 13, 2026. Traveler A is leaving JFK between 5:00 PM and midnight. Traveler B is leaving SEA between 2:00 PM and 8:00 PM. Allow at most one stop and no more than a 2 hour arrival gap.",
+      "expected_tools": [
+        {
+          "name": "search_meetup_options",
+          "args": {
+            "origin_a": "JFK",
+            "depart_after_a": "2026-11-13T17:00:00",
+            "depart_before_a": "2026-11-13T23:59:59",
+            "origin_b": "SEA",
+            "depart_after_b": "2026-11-13T14:00:00",
+            "depart_before_b": "2026-11-13T20:00:00",
+            "max_stops": 1,
+            "max_arrival_gap_minutes": 120
+          }
+        }
+      ]
+    },
+    {
+        "id": "lounge_lookup_amex_jfk",
+        "category": "lounge_lookup",
+        "input": "I have an Amex Platinum card. What lounges can I find at JFK? Just tell me which lounges are available; I don't need detailed access policy rules.",
+        "expected_tools": [
+          {
+            "name": "find_lounges",
+            "args": {
+              "card": "Amex Platinum",
+              "airport": "JFK"
+            }
+          }
+        ]
+    },
+    {
+        "id": "lounge_policy_amex_centurion",
+        "category": "lounge_policy",
+        "input": "What is the access policy for the Centurion Lounge with an Amex Platinum card? I only want the policy; don't search for lounges at a specific airport.",
+        "expected_tools": [
+          {
+            "name": "get_lounge_policy",
+            "args": {
+              "card": "Amex Platinum",
+              "lounge_network": "Centurion Lounge"
+            }
+          }
+        ]
+    },
+    {
+        "id": "flight_and_lounge_lookup",
+        "category": "mixed",
+        "input": "Find a meetup destination for two travelers on November 13, 2026. Traveler A is leaving JFK between 5:00 PM and midnight. Traveler B is leaving SEA between 2:00 PM and 8:00 PM. Allow at most one stop and no more than a 2 hour arrival gap. I also have an Amex Platinum card and want to know what lounges are available at JFK. I don't need detailed lounge access policy rules.",
+        "expected_tools": [
+          {
+            "name": "search_meetup_options",
+            "args": {
+              "origin_a": "JFK",
+              "depart_after_a": "2026-11-13T17:00:00",
+              "depart_before_a": "2026-11-13T23:59:59",
+              "origin_b": "SEA",
+              "depart_after_b": "2026-11-13T14:00:00",
+              "depart_before_b": "2026-11-13T20:00:00",
+              "max_stops": 1,
+              "max_arrival_gap_minutes": 120
+            }
+          },
+          {
+            "name": "find_lounges",
+            "args": {
+              "card": "Amex Platinum",
+              "airport": "JFK"
+            }
+          }
+        ]
+    },
+    {
+        "id": "flight_search_bos_lax_nonstop",
+        "category": "flight_search",
+        "input": "Find a meetup destination for travelers leaving BOS and LAX on November 14, 2026. The BOS traveler can leave from 6:00 PM to 10:00 PM, and the LAX traveler can leave from 3:00 PM to 7:00 PM. I only want nonstop flights, and they should arrive within 90 minutes of each other.",
+        "expected_tools": [
+          {
+            "name": "search_meetup_options",
+            "args": {
+              "origin_a": "BOS",
+              "depart_after_a": "2026-11-14T18:00:00",
+              "depart_before_a": "2026-11-14T22:00:00",
+              "origin_b": "LAX",
+              "depart_after_b": "2026-11-14T15:00:00",
+              "depart_before_b": "2026-11-14T19:00:00",
+              "max_stops": 0,
+              "max_arrival_gap_minutes": 90
+            }
+          }
+        ]
+    },
+    {
+        "id": "flight_search_paraphrased_constraints",
+        "category": "flight_search",
+        "input": "My friend is flying out of JFK and I'm leaving SEA on November 13, 2026. They can leave New York from 5 PM to midnight, and I can leave Seattle from 2 PM to 8 PM. I don't want either of us taking a connecting flight, and we should land within an hour of each other. Where can we meet?",
+        "expected_tools": [
+          {
+            "name": "search_meetup_options",
+            "args": {
+              "origin_a": "JFK",
+              "depart_after_a": "2026-11-13T17:00:00",
+              "depart_before_a": "2026-11-13T23:59:59",
+              "origin_b": "SEA",
+              "depart_after_b": "2026-11-13T14:00:00",
+              "depart_before_b": "2026-11-13T20:00:00",
+              "max_stops": 0,
+              "max_arrival_gap_minutes": 60
+            }
+          }
+        ]
+    },
+    {
+        "id": "flight_search_missing_required_information",
+        "category": "missing_information",
+        "input": "Find somewhere for me and my friend to meet by plane.",
+        "expected_tools": []
+    }
+]

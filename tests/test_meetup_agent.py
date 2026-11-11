@@ -157,3 +157,65 @@ def test_agent_orchestrates_flight_lounge_and_policy_tools_in_sequence():
     }
 
     assert model.message_counts == [2, 4, 6, 8]
+
+def test_agent_can_return_tool_trace():
+    calls = []
+
+    model = FakeModel([
+        AIMessage(
+            content="",
+            tool_calls=[
+                tool_call(
+                    "search_meetup_options",
+                    {
+                        "origin_a": "JFK",
+                        "origin_b": "SEA",
+                        "max_stops": 1,
+                        "max_arrival_gap_minutes": 120,
+                    },
+                    "flight-call",
+                )
+            ],
+        ),
+        AIMessage(
+            content="Austin is a meetup option."
+        ),
+    ])
+
+    tool_map = {
+        "search_meetup_options": FakeTool(
+            "search_meetup_options",
+            {
+                "results": [
+                    {
+                        "destination": "AUS",
+                    }
+                ]
+            },
+            calls,
+        ),
+    }
+
+    answer, trace = run_tool_loop(
+        question=(
+            "Find a meetup for JFK and SEA "
+            "with at most one stop and a 2 hour arrival gap."
+        ),
+        model_with_tools=model,
+        tool_map=tool_map,
+        return_trace=True,
+    )
+
+    assert answer == "Austin is a meetup option."
+
+    assert trace == [
+        {
+            "name": "search_meetup_options",
+            "args": {
+                "origin_a": "JFK",
+                "origin_b": "SEA",
+                "max_stops": 1,
+                "max_arrival_gap_minutes": 120,
+            },
+        }
+    ]

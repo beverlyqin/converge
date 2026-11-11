@@ -56,6 +56,7 @@ def run_tool_loop(
     question: str,
     model_with_tools,
     tool_map,
+    return_trace: bool = False,
 ) -> str:
     """Run the agent loop with injectable model/tools for deterministic tests."""
 
@@ -63,6 +64,7 @@ def run_tool_loop(
         SystemMessage(content=SYSTEM_PROMPT),
         HumanMessage(content=question),
     ]
+    tool_trace = []
 
     while True:
         response = model_with_tools.invoke(messages)
@@ -70,9 +72,17 @@ def run_tool_loop(
         messages.append(response)
 
         if not response.tool_calls:
+            if return_trace:
+                return response.text, tool_trace
             return response.text
-
+                
         for tool_call in response.tool_calls:
+            tool_trace.append(
+                {
+                    "name": tool_call["name"],
+                    "args": tool_call["args"],
+                }
+            )
             tool = tool_map[tool_call["name"]]
 
             result = tool.invoke(
