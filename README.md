@@ -1,6 +1,6 @@
-# Flight Meetup
+# Converge
 
-Flight Meetup is a full-stack travel optimizer that answers a different question from a normal flight search:
+Converge is a full-stack travel optimizer that answers a different question from a normal flight search:
 
 > **If two people are leaving from different cities, where should they meet?**
 
@@ -602,7 +602,7 @@ LangChain tools and MCP functions wrap stable backend functions rather than owni
 
 ## Why this project
 
-Flight Meetup separates concerns deliberately:
+Converge separates concerns deliberately:
 
 - deterministic algorithms decide what is feasible,
 - ranking decides what is convenient,
