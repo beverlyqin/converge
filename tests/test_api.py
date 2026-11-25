@@ -386,7 +386,7 @@ def test_search_meetups_emits_structured_metrics(monkeypatch, caplog):
 
     with caplog.at_level(
         logging.INFO,
-        logger="flight_meetup.search",
+        logger="converge.search",
     ):
         response = client.post(
             "/meetups/search",
@@ -419,7 +419,7 @@ def test_search_meetups_emits_structured_metrics(monkeypatch, caplog):
     record = next(
         record
         for record in caplog.records
-        if record.name == "flight_meetup.search"
+        if record.name == "converge.search"
     )
     payload = json.loads(record.message)
 
