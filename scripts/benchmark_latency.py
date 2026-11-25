@@ -110,7 +110,7 @@ def benchmark_remote(url: str, iterations: int, warmup: int) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Benchmark Flight Meetup search latency."
+        description="Benchmark Converge search latency."
     )
     parser.add_argument("--iterations", type=int, default=100)
     parser.add_argument("--warmup", type=int, default=5)
