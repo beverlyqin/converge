@@ -12,7 +12,7 @@ The project combines a deterministic flight-search engine with FastAPI, Next.js,
 
 **Frontend:** https://frontend-five-brown-e05gyzilwo.vercel.app/  
 **Backend:** deployed on Railway  
-**Backend API docs:** https://flightmeetup-production.up.railway.app/docs
+**Backend API docs:** https://converge-prod.up.railway.app/docs
 
 ![Converge search and ranked destination result](docs/converge-demo.png)
 
@@ -544,7 +544,7 @@ FLIGHT_PROVIDER=mock
 
 Backend API:
 
-https://flightmeetup-production.up.railway.app
+https://converge-prod.up.railway.app
 
 ### Frontend — Vercel
 
@@ -555,7 +555,7 @@ The frontend project uses `frontend/` as its root directory.
 Environment variable:
 
 ```text
-BACKEND_URL=https://flightmeetup-production.up.railway.app
+BACKEND_URL=https://converge-prod.up.railway.app
 ```
 
 Using a server-side Next.js proxy keeps backend configuration out of the browser-facing request path.
