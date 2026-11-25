@@ -25,7 +25,7 @@ from backend.app.airports.timezones import get_airport_timezone
 from backend.app.routing.reachability import get_return_flights
 
 app = FastAPI()
-logger = logging.getLogger("flight_meetup.search")
+logger = logging.getLogger("converge.search")
 
 _oag_flight_cache = TTLFlightCache(
     ttl_seconds=float(

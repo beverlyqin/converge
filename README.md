@@ -14,7 +14,7 @@ The project combines a deterministic flight-search engine with FastAPI, Next.js,
 **Backend:** deployed on Railway  
 **Backend API docs:** https://flightmeetup-production.up.railway.app/docs
 
-![Flight Meetup search and ranked destination result](docs/flight-meetup-demo.png)
+![Converge search and ranked destination result](docs/converge-demo.png)
 
 > The public deployment currently uses the local mock flight provider so visitors cannot exhaust the project's limited OAG API quota. The same backend also supports live OAG schedule retrieval when `FLIGHT_PROVIDER` is switched from `mock` and an `OAG_API_KEY` is configured.
 
@@ -364,8 +364,8 @@ Do not point repeated remote benchmarks at a live OAG-backed deployment unless y
 Build and run the FastAPI backend locally:
 
 ```bash
-docker build -t flight-meetup .
-docker run --rm -p 8000:8000 -e FLIGHT_PROVIDER=mock flight-meetup
+docker build -t converge .
+docker run --rm -p 8000:8000 -e FLIGHT_PROVIDER=mock converge
 ```
 
 Then open:
@@ -379,8 +379,8 @@ http://localhost:8000/docs
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/beverlyqin/flight_meetup.git
-cd flight_meetup
+git clone https://github.com/beverlyqin/converge.git
+cd converge
 ```
 
 ### 2. Set up the Python backend

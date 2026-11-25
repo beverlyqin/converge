@@ -9,7 +9,7 @@ from backend.app.tools.lounge_tools import (
 )
 
 
-mcp = MCPServer("Flight Meetup")
+mcp = MCPServer("Converge")
 
 
 @mcp.tool()

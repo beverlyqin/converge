@@ -53,7 +53,7 @@ def real_flight_agent(question: str) -> str:
     )
 
     update_current_trace(
-        name="Flight Meetup Agent",
+        name="Converge Agent",
         input=question,
         output=answer,
     )
