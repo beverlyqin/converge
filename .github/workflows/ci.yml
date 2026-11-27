@@ -79,4 +79,4 @@ jobs:
         run: python -m pytest tests/test_agent_eval.py tests/test_task_completion_eval.py
 
       - name: Run deterministic ranking evaluation
-        run: python -m scripts.evaluate_ranking
+        run: python -m scripts.evals.evaluate_ranking

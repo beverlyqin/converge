@@ -4,7 +4,7 @@ from pathlib import Path
 
 from rank_bm25 import BM25Okapi
 
-project_root = Path(__file__).resolve().parents[1]
+project_root = Path(__file__).resolve().parents[2]
 chunks_path = project_root / "data" / "rag" / "chunks.json"
 
 chunks = json.loads(

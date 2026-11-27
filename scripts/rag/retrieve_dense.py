@@ -5,7 +5,7 @@ from langchain_core.documents import Document
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_huggingface import HuggingFaceEmbeddings
 
-project_root = Path(__file__).resolve().parents[1]
+project_root = Path(__file__).resolve().parents[2]
 chunks_path = project_root / "data" / "rag" / "chunks.json"
 
 chunks = json.loads(

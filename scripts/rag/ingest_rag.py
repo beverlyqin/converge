@@ -5,7 +5,7 @@ import httpx
 from bs4 import BeautifulSoup
 
 
-project_root = Path(__file__).resolve().parents[1]
+project_root = Path(__file__).resolve().parents[2]
 
 sources_path = project_root / "data" / "rag" / "sources.json"
 raw_dir = project_root / "data" / "rag" / "raw"

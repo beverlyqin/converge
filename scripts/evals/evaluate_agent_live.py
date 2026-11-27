@@ -40,7 +40,7 @@ def expected_tools_to_tool_calls(expected_tools):
     ]
 
 def load_eval_cases():
-    project_root = Path(__file__).resolve().parents[1]
+    project_root = Path(__file__).resolve().parents[2]
 
     cases_path = (
         project_root

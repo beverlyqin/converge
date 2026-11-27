@@ -233,20 +233,9 @@ data/
   rag/              # lounge/card corpus, chunks, evaluation data
 
 scripts/
-  ingest_rag.py
-  chunk_rag.py
-  retrieve_bm25.py
-  retrieve_dense.py
-  retrieve_hybrid.py
-  evaluate_retrieval.py
-  evaluate_product_retrieval.py
-  evaluate_agent_live.py
-  evaluate_task_completion.py
-  evaluate_ranking.py
-  evaluate_oag.py
-  benchmark_latency.py
-  demo_tool_calling.py
-  search_real_meetup.py
+  rag/              # build the lounge corpus; retrieval experiments
+  evals/            # agent, ranking, retrieval, and OAG evaluations; latency benchmark
+  demos/            # manual runs against live Gemini and OAG APIs
 
 tests/
   # deterministic unit/integration tests
@@ -258,11 +247,11 @@ tests/
 
 The Gemini tool-calling agent is evaluated separately from the deterministic flight-search and ranking engine. The evaluation uses DeepEval and curated inputs so agent behavior can be measured without consuming live OAG flight-provider quota.
 
-**Tool selection and argument correctness:** `data/agent_eval_cases.json` contains 7 scenarios covering flight search, lounge lookup, lounge access policies, combined requests, paraphrased constraints, and missing required information. `scripts/evaluate_agent_live.py` repeats each scenario 3 times against Gemini, records the tool-call trace, and checks both DeepEval tool correctness and domain-specific argument correctness. The argument comparator accepts equivalent traveler A/B ordering while preserving each airport's departure windows and search constraints.
+**Tool selection and argument correctness:** `data/agent_eval_cases.json` contains 7 scenarios covering flight search, lounge lookup, lounge access policies, combined requests, paraphrased constraints, and missing required information. `scripts/evals/evaluate_agent_live.py` repeats each scenario 3 times against Gemini, records the tool-call trace, and checks both DeepEval tool correctness and domain-specific argument correctness. The argument comparator accepts equivalent traveler A/B ordering while preserving each airport's departure windows and search constraints.
 
 In the latest recorded live evaluation (PR #28), **21/21 tool selections** and **21/21 argument checks** passed across 7 scenarios × 3 runs. These are development-set results, not production reliability benchmarks.
 
-**Task completion:** `data/task_completion_eval_cases.json` contains 4 scenarios (flight search, lounge lookup, combined flight + lounge lookup, and lounge policy lookup). `scripts/evaluate_task_completion.py` traces the real Gemini agent and tool invocations and uses DeepEval's `TaskCompletionMetric` with a Gemini judge (threshold: 0.7). Task-completion scores can vary between runs; no aggregate pass rate is claimed here.
+**Task completion:** `data/task_completion_eval_cases.json` contains 4 scenarios (flight search, lounge lookup, combined flight + lounge lookup, and lounge policy lookup). `scripts/evals/evaluate_task_completion.py` traces the real Gemini agent and tool invocations and uses DeepEval's `TaskCompletionMetric` with a Gemini judge (threshold: 0.7). Task-completion scores can vary between runs; no aggregate pass rate is claimed here.
 
 To run evaluations locally, install the development dependencies and configure a Gemini API key:
 
@@ -271,14 +260,14 @@ pip install -r requirements-dev.txt
 export GOOGLE_API_KEY="your-key"
 
 # Live Gemini tool + argument evaluation (mock-backed flight tools)
-python -m scripts.evaluate_agent_live
+python -m scripts.evals.evaluate_agent_live
 
 # Live Gemini task-completion evaluation (Gemini judge, sequential runs)
-python -m scripts.evaluate_task_completion
+python -m scripts.evals.evaluate_task_completion
 
 # Deterministic evaluation checks (no live LLM calls)
 python -m pytest tests/test_agent_eval.py tests/test_task_completion_eval.py
-python -m scripts.evaluate_ranking
+python -m scripts.evals.evaluate_ranking
 ```
 
 GitHub Actions runs the deterministic agent-evaluation tests and ranking scenarios in a dedicated `evaluation-tests` job. Live Gemini evaluations and live OAG evaluations are deliberately excluded from CI due to nondeterminism, API-key requirements, latency, and rate limits.
@@ -290,7 +279,7 @@ The repository includes a curated ranking-evaluation suite covering individual o
 Run:
 
 ```bash
-python -m scripts.evaluate_ranking
+python -m scripts.evals.evaluate_ranking
 ```
 
 The current 12-scenario suite verifies that changing ranking weights changes the preferred destination in the expected direction. The current evaluation passes **12/12 expected outcomes (100%)**. Treat this as a deterministic product-behavior evaluation set, not a real-world user-preference benchmark.
@@ -312,7 +301,7 @@ The default scenario set uses three origin pairs and measures:
 Run one scenario first:
 
 ```bash
-RUN_LIVE_OAG_EVAL=1 python -m scripts.evaluate_oag \
+RUN_LIVE_OAG_EVAL=1 python -m scripts.evals.evaluate_oag \
   --date 2026-11-13 \
   --max-scenarios 1 \
   --request-budget 25
@@ -321,7 +310,7 @@ RUN_LIVE_OAG_EVAL=1 python -m scripts.evaluate_oag \
 Then, if the first run looks reasonable, run all three:
 
 ```bash
-RUN_LIVE_OAG_EVAL=1 python -m scripts.evaluate_oag \
+RUN_LIVE_OAG_EVAL=1 python -m scripts.evals.evaluate_oag \
   --date 2026-11-13 \
   --max-scenarios 3 \
   --request-budget 25 \
@@ -344,7 +333,7 @@ These results are a small engineering evaluation, not a broad production benchma
 Run a quota-safe local benchmark of the full FastAPI `POST /meetups/search` path using the mock provider:
 
 ```bash
-python -m scripts.benchmark_latency
+python -m scripts.evals.benchmark_latency
 ```
 
 The script reports mean, median, p95, minimum, and maximum latency.
@@ -354,7 +343,7 @@ On a 100-request localhost HTTP benchmark using the mock provider, the current s
 To measure a deployed backend instead:
 
 ```bash
-python -m scripts.benchmark_latency --url https://YOUR-BACKEND
+python -m scripts.evals.benchmark_latency --url https://YOUR-BACKEND
 ```
 
 Do not point repeated remote benchmarks at a live OAG-backed deployment unless you intentionally want to consume provider quota.
@@ -399,7 +388,7 @@ Dependencies are split by purpose:
 | --- | --- |
 | `requirements.txt` | Running the API (also what Docker and Railway install) |
 | `requirements-dev.txt` | Tests and DeepEval agent evaluation |
-| `requirements-rag.txt` | Rebuilding the lounge corpus and running retrieval experiments in `scripts/` |
+| `requirements-rag.txt` | Rebuilding the lounge corpus and running retrieval experiments in `scripts/rag/` |
 
 The dev and RAG files both include `requirements.txt`, and all three resolve together.
 
@@ -477,7 +466,7 @@ export GOOGLE_API_KEY="your-key"
 Then:
 
 ```bash
-python -m scripts.demo_tool_calling
+python -m scripts.demos.demo_tool_calling
 ```
 
 The Google Gen AI client also supports `GEMINI_API_KEY`; set only one key variable when possible.
