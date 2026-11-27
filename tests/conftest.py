@@ -1,6 +1,19 @@
 import os
+from pathlib import Path
 
 import pytest
+
+TEST_FLIGHTS_PATH = Path(__file__).parent / "fixtures" / "mock_flights.json"
+
+
+@pytest.fixture(autouse=True)
+def use_test_flight_fixture(monkeypatch):
+    """Keep tests on fixed test flights, separate from the demo data."""
+
+    monkeypatch.setattr(
+        "backend.app.providers.mock.DEFAULT_FLIGHTS_PATH",
+        TEST_FLIGHTS_PATH,
+    )
 
 
 @pytest.fixture(autouse=True)
