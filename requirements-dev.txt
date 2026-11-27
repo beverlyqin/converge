@@ -1,3 +1,8 @@
+# Tests and agent evaluation.
 -r requirements.txt
 
+pytest==9.2.0
+# deepeval 4.3.4 requires click<8.4, which also holds back
+# huggingface-hub/transformers when installed with the runtime set.
 deepeval==4.3.4
+python-dotenv==1.2.4

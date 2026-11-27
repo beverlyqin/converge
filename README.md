@@ -393,6 +393,16 @@ pip install -r requirements.txt
 
 The project is currently developed with Python 3.13.
 
+Dependencies are split by purpose:
+
+| File | Use it for |
+| --- | --- |
+| `requirements.txt` | Running the API (also what Docker and Railway install) |
+| `requirements-dev.txt` | Tests and DeepEval agent evaluation |
+| `requirements-rag.txt` | Rebuilding the lounge corpus and running retrieval experiments in `scripts/` |
+
+The dev and RAG files both include `requirements.txt`, and all three resolve together.
+
 Run the backend in quota-safe mock mode:
 
 ```bash
