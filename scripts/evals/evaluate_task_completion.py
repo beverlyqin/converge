@@ -75,7 +75,7 @@ def hyperparameters():
     }
 
 def load_task_completion_cases():
-    project_root = Path(__file__).resolve().parents[1]
+    project_root = Path(__file__).resolve().parents[2]
 
     cases_path = (
         project_root

@@ -1,6 +1,6 @@
 from langchain_core.messages import AIMessage
 
-from scripts.evaluate_agent_live import arguments_match, flight_arguments_match, normalize_datetime, travelers_match
+from scripts.evals.evaluate_agent_live import arguments_match, flight_arguments_match, normalize_datetime, travelers_match
 from backend.app.agent.meetup_agent import run_tool_loop
 from deepeval.metrics import ToolCorrectnessMetric
 from deepeval.models import DeepEvalBaseLLM

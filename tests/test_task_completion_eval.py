@@ -1,4 +1,4 @@
-from scripts.evaluate_task_completion import (
+from scripts.evals.evaluate_task_completion import (
     TracedTool,
     load_task_completion_cases,
 )

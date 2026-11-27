@@ -12,7 +12,7 @@ from backend.app.providers.schedules import collect_direct_schedules
 from backend.app.ranking.scoring import RankingWeights, rank_meeting_destinations
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SCENARIOS = PROJECT_ROOT / "data" / "oag_eval_scenarios.json"
 
 

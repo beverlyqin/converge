@@ -11,7 +11,7 @@ from langchain_core.documents import Document
 
 nltk.download("punkt_tab", quiet=True)
 
-project_root = Path(__file__).resolve().parents[1]
+project_root = Path(__file__).resolve().parents[2]
 
 cleaned_dir = project_root / "data" / "rag" / "cleaned"
 sources_path = project_root / "data" / "rag" / "sources.json"

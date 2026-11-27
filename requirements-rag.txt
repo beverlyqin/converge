@@ -1,4 +1,4 @@
-# Offline RAG pipeline and retrieval experiments (scripts/).
+# Offline RAG pipeline and retrieval experiments (scripts/rag/).
 # Not needed to run the API.
 -r requirements.txt
 
