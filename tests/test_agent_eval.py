@@ -3,7 +3,37 @@ from langchain_core.messages import AIMessage
 from scripts.evaluate_agent_live import arguments_match, flight_arguments_match, normalize_datetime, travelers_match
 from backend.app.agent.meetup_agent import run_tool_loop
 from deepeval.metrics import ToolCorrectnessMetric
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import LLMTestCase, ToolCall, ToolCallParams
+
+
+class NoLLMJudge(DeepEvalBaseLLM):
+    """Judge model that fails if called.
+
+    ToolCorrectnessMetric builds a judge model on construction (OpenAI by
+    default, which needs OPENAI_API_KEY), but the tool-selection and
+    argument checks in these tests are deterministic and never call it.
+    """
+
+    def __init__(self):
+        super().__init__(model="no-llm-judge")
+
+    def load_model(self):
+        return self
+
+    def generate(self, *args, **kwargs):
+        raise AssertionError("Deterministic tool-correctness test called an LLM judge")
+
+    async def a_generate(self, *args, **kwargs):
+        raise AssertionError("Deterministic tool-correctness test called an LLM judge")
+
+    def get_model_name(self):
+        return "no-llm-judge"
+
+
+def tool_correctness_metric(**kwargs):
+    return ToolCorrectnessMetric(model=NoLLMJudge(), **kwargs)
+
 
 class FakeModel:
     def __init__(self, responses):
@@ -56,7 +86,7 @@ def test_correct_flight_search_tool():
         ],
     )
 
-    metric = ToolCorrectnessMetric()
+    metric = tool_correctness_metric()
 
     metric.measure(test_case)
 
@@ -82,7 +112,7 @@ def test_wrong_tool_is_detected():
         ],
     )
 
-    metric = ToolCorrectnessMetric()
+    metric = tool_correctness_metric()
 
     metric.measure(test_case)
 
@@ -115,7 +145,7 @@ def test_wrong_flight_arguments_are_detected():
         ],
     )
 
-    metric = ToolCorrectnessMetric(
+    metric = tool_correctness_metric(
         evaluation_params=[
             ToolCallParams.INPUT_PARAMETERS
         ],
@@ -158,7 +188,7 @@ def test_arrival_gap_constraint_is_preserved():
         ],
     )
 
-    metric = ToolCorrectnessMetric(
+    metric = tool_correctness_metric(
         evaluation_params=[
             ToolCallParams.INPUT_PARAMETERS
         ],
@@ -203,7 +233,7 @@ def test_multiple_flight_constraints_are_preserved():
         ],
     )
 
-    metric = ToolCorrectnessMetric(
+    metric = tool_correctness_metric(
         evaluation_params=[
             ToolCallParams.INPUT_PARAMETERS
         ],
@@ -314,7 +344,7 @@ def test_agent_trace_is_scored_by_deepeval():
         ],
     )
 
-    metric = ToolCorrectnessMetric(
+    metric = tool_correctness_metric(
         evaluation_params=[
             ToolCallParams.INPUT_PARAMETERS
         ],
