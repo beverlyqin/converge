@@ -6,11 +6,16 @@ from backend.app.domain.models import FlightSegment
 from backend.app.providers.base import FlightProvider
 
 
-class MockFlightProvider(FlightProvider):
-    """Load normalized flight data from the local mock fixture."""
+DEFAULT_FLIGHTS_PATH = (
+    Path(__file__).resolve().parents[2] / "data" / "mock_flights.json"
+)
 
-    def __init__(self):
-        file_path = Path("backend/data/mock_flights.json")
+
+class MockFlightProvider(FlightProvider):
+    """Load normalized flight data from a local JSON file."""
+
+    def __init__(self, file_path: Path | None = None):
+        file_path = file_path or DEFAULT_FLIGHTS_PATH
 
         with open(file_path, "r") as file:
             data = json.load(file)
@@ -36,6 +41,6 @@ class MockFlightProvider(FlightProvider):
         ]
 
 
-def load_mock_flights() -> list[FlightSegment]:
-    """Load all mock flights for existing tests."""
-    return MockFlightProvider().flights
+def load_mock_flights(file_path: Path | None = None) -> list[FlightSegment]:
+    """Load all flights from a mock data file."""
+    return MockFlightProvider(file_path).flights
